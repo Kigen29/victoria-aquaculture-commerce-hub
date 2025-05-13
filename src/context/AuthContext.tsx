@@ -85,18 +85,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error;
 
-      // Profile will be created automatically via the database trigger
-      // We'll update it with the additional information
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({
-          full_name: fullName,
-          phone,
-          address,
-        })
-        .eq("id", supabase.auth.getUser().then(res => res.data.user?.id));
+      // Get the current user to update their profile
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      
+      if (currentUser) {
+        // Profile will be created automatically via the database trigger
+        // We'll update it with the additional information
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update({
+            full_name: fullName,
+            phone,
+            address,
+          })
+          .eq("id", currentUser.id);
 
-      if (profileError) throw profileError;
+        if (profileError) throw profileError;
+      }
 
       toast.success("Account created successfully! Please check your email to verify your account.");
       navigate("/shop");
