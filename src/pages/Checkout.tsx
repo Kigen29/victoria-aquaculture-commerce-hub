@@ -1,13 +1,13 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import PageLayout from "@/components/layout/PageLayout";
 
 // Add Paystack types
 declare global {
@@ -68,6 +68,7 @@ export default function Checkout() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paystackLoaded, setPaystackLoaded] = useState(false);
   const [formData, setFormData] = useState({
     fullName: profile?.full_name || '',
     email: user?.email || '',
@@ -83,13 +84,33 @@ export default function Checkout() {
 
   // Load Paystack script
   useEffect(() => {
+    // Check if Paystack is already loaded
+    if (window.PaystackPop) {
+      setPaystackLoaded(true);
+      return;
+    }
+
     const script = document.createElement("script");
     script.src = "https://js.paystack.co/v1/inline.js";
     script.async = true;
+    
+    script.onload = () => {
+      setPaystackLoaded(true);
+      console.log("Paystack script loaded successfully");
+    };
+    
+    script.onerror = () => {
+      console.error("Failed to load Paystack script");
+      toast.error("Payment gateway failed to load. Please refresh the page.");
+    };
+    
     document.body.appendChild(script);
 
     return () => {
-      document.body.removeChild(script);
+      // Clean up script only if we added it
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
     };
   }, []);
 
@@ -106,7 +127,8 @@ export default function Checkout() {
         .insert({
           user_id: user!.id,
           total_amount: getCartTotal(),
-          status: 'paid'
+          status: 'paid',
+          payment_reference: reference
         })
         .select()
         .single();
@@ -127,6 +149,22 @@ export default function Checkout() {
 
       if (itemsError) throw itemsError;
 
+      // Update customer profile information if needed
+      if (profile && (
+          profile.phone !== formData.phone ||
+          profile.address !== formData.address ||
+          profile.full_name !== formData.fullName
+        )) {
+        await supabase
+          .from('profiles')
+          .update({
+            phone: formData.phone,
+            address: formData.address,
+            full_name: formData.fullName
+          })
+          .eq('id', user!.id);
+      }
+
       return order.id;
     } catch (error) {
       console.error("Error creating order:", error);
@@ -135,22 +173,45 @@ export default function Checkout() {
   };
 
   const handleCheckout = () => {
-    if (isProcessing) return;
+    if (isProcessing || !paystackLoaded) {
+      if (!paystackLoaded) {
+        toast.error("Payment gateway is still loading. Please wait.");
+      }
+      return;
+    }
     
     if (!window.PaystackPop) {
-      toast.error("Payment gateway not loaded. Please try again.");
+      toast.error("Payment gateway not loaded. Please refresh the page.");
+      return;
+    }
+    
+    // Validate form fields
+    if (!formData.fullName || !formData.email || !formData.phone || !formData.address) {
+      toast.error("Please fill in all fields");
       return;
     }
     
     setIsProcessing(true);
-
+    
     try {
-      const paystack = window.PaystackPop.setup({
-        key: "pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", // Replace with your Paystack public key
+      // Initialize Paystack payment
+      const reference = `order_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
+      const amount = Math.round(getCartTotal() * 100); // Paystack amount is in kobo (cents)
+      
+      console.log("Initializing Paystack with:", {
         email: formData.email,
-        amount: Math.round(getCartTotal() * 100), // Paystack amount is in kobo, so multiply by 100
+        amount,
+        reference
+      });
+      
+      // Use actual Paystack public key for your account
+      // Replace this with your real Paystack public key
+      const paystack = window.PaystackPop.setup({
+        key: "pk_test_a256c089716ea27c62566facf11a7df853debcfb", // Replace with your Paystack public key
+        email: formData.email,
+        amount: amount,
         currency: "NGN",
-        ref: `order_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
+        ref: reference,
         firstname: formData.fullName.split(' ')[0],
         lastname: formData.fullName.split(' ').slice(1).join(' '),
         phone: formData.phone,
@@ -160,36 +221,53 @@ export default function Checkout() {
               display_name: "Address",
               variable_name: "address",
               value: formData.address,
+            },
+            {
+              display_name: "Cart Items",
+              variable_name: "cart_items",
+              value: JSON.stringify(cartItems.map(item => ({
+                name: item.product.name,
+                quantity: item.quantity
+              })))
             }
           ]
         },
         callback: async (response) => {
           try {
+            console.log("Payment successful:", response);
+            toast.success("Payment successful!");
+            
+            // Create order in database
             const orderId = await createOrder(response.reference);
+            
+            // Clear cart and navigate to success page
             clearCart();
-            navigate("/order-success", { state: { orderId } });
+            navigate("/order-success", { state: { orderId, reference: response.reference } });
           } catch (error) {
+            console.error("Error processing order:", error);
             toast.error("Payment was successful but we couldn't create your order. Please contact support.");
             setIsProcessing(false);
           }
         },
         onClose: () => {
+          console.log("Payment closed or canceled");
           setIsProcessing(false);
           toast.info("Payment canceled");
         }
       });
+      
+      // Open the Paystack payment dialog
       paystack.openIframe();
     } catch (error) {
-      console.error("Payment error:", error);
-      toast.error("Payment failed. Please try again.");
+      console.error("Payment initialization error:", error);
+      toast.error("Payment failed to initialize. Please try again.");
       setIsProcessing(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-grow container py-8">
+    <PageLayout>
+      <main className="container py-8">
         <h1 className="text-3xl font-bold mb-8">Checkout</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -315,11 +393,16 @@ export default function Checkout() {
               <div className="mt-4 text-xs text-center text-gray-500">
                 <p>By placing your order, you agree to our Terms of Service and Privacy Policy.</p>
               </div>
+              
+              {!paystackLoaded && (
+                <div className="mt-3 text-amber-500 text-center text-xs">
+                  Payment gateway is loading...
+                </div>
+              )}
             </div>
           </div>
         </div>
       </main>
-      <Footer />
-    </div>
+    </PageLayout>
   );
 }
