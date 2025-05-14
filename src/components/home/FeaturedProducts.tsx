@@ -5,34 +5,34 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ShoppingCart } from "lucide-react";
 
-// Sample product data - this will be fetched from Supabase
+// Sample product data with updated fish and chicken images
 const sampleProducts = [
   {
     id: "1",
     name: "Fresh Tilapia",
     price: 12.99,
-    image: "https://images.unsplash.com/photo-1582562124811-c09040d0a901?auto=format&fit=crop&q=80&w=500",
+    image: "https://images.unsplash.com/photo-1511994298241-608e28f14fde?auto=format&fit=crop&q=80&w=500", // Fish
     category: "fish"
   },
   {
     id: "2",
     name: "Nile Perch Fillet",
     price: 18.99,
-    image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?auto=format&fit=crop&q=80&w=500",
+    image: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&q=80&w=500", // Fish
     category: "fish"
   },
   {
     id: "3",
     name: "Free Range Chicken",
     price: 15.99,
-    image: "https://images.unsplash.com/photo-1465379944081-7f47de8d74ac?auto=format&fit=crop&q=80&w=500",
+    image: "https://images.unsplash.com/photo-1587593810167-a84920ea0781?auto=format&fit=crop&q=80&w=500", // Chicken
     category: "chicken"
   },
   {
     id: "4",
     name: "Organic Chicken Wings",
     price: 9.99,
-    image: "https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&q=80&w=500",
+    image: "https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=500", // Chicken
     category: "chicken"
   }
 ];
