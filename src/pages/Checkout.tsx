@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
@@ -34,6 +33,34 @@ type PaystackConfig = {
   metadata?: Record<string, any>;
   onClose?: () => void;
   callback?: (response: any) => void;
+};
+
+// Fish and chicken images to use as fallbacks
+const fishImages = [
+  "https://images.unsplash.com/photo-1511994298241-608e28f14fde?auto=format&fit=crop&q=80&w=500",
+  "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&q=80&w=500",
+];
+
+const chickenImages = [
+  "https://images.unsplash.com/photo-1587593810167-a84920ea0781?auto=format&fit=crop&q=80&w=500",
+  "https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=500",
+];
+
+// Function to get appropriate image based on product category
+const getProductImage = (product: any) => {
+  if (product.image_url) return product.image_url;
+  
+  const category = product.category?.toLowerCase();
+  
+  if (category === 'fish') {
+    const randomIndex = Math.floor(Math.random() * fishImages.length);
+    return fishImages[randomIndex];
+  } else if (category === 'chicken') {
+    const randomIndex = Math.floor(Math.random() * chickenImages.length);
+    return chickenImages[randomIndex];
+  }
+  
+  return fishImages[0];
 };
 
 export default function Checkout() {
@@ -247,7 +274,7 @@ export default function Checkout() {
                     <div className="flex items-center">
                       <div className="w-10 h-10 mr-2">
                         <img 
-                          src={product.image_url || "/placeholder.svg"} 
+                          src={getProductImage(product)} 
                           alt={product.name} 
                           className="w-full h-full object-cover rounded"
                         />

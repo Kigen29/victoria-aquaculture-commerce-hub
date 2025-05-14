@@ -15,6 +15,36 @@ import {
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 
+// Fish and chicken images to use as fallbacks
+const fishImages = [
+  "https://images.unsplash.com/photo-1511994298241-608e28f14fde?auto=format&fit=crop&q=80&w=500", // Fish 1
+  "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&q=80&w=500", // Fish 2
+];
+
+const chickenImages = [
+  "https://images.unsplash.com/photo-1587593810167-a84920ea0781?auto=format&fit=crop&q=80&w=500", // Chicken 1
+  "https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=500", // Chicken 2
+];
+
+// Function to get appropriate image based on product category
+const getProductImage = (product: any) => {
+  if (product.image_url) return product.image_url;
+  
+  const category = product.category?.toLowerCase();
+  
+  // Select random image based on category
+  if (category === 'fish') {
+    const randomIndex = Math.floor(Math.random() * fishImages.length);
+    return fishImages[randomIndex];
+  } else if (category === 'chicken') {
+    const randomIndex = Math.floor(Math.random() * chickenImages.length);
+    return chickenImages[randomIndex];
+  }
+  
+  // Default image if no category or unknown
+  return fishImages[0];
+};
+
 export default function Cart() {
   const { cartItems, updateQuantity, removeFromCart, getCartTotal } = useCart();
   const { user } = useAuth();
@@ -56,7 +86,7 @@ export default function Cart() {
                 >
                   <div className="sm:w-24 h-24 w-full">
                     <img 
-                      src={product.image_url || "/placeholder.svg"} 
+                      src={getProductImage(product)} 
                       alt={product.name}
                       className="w-full h-full object-cover rounded-md"
                     />
