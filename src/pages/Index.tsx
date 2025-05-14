@@ -1,12 +1,11 @@
 
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
+import { useEffect } from "react";
+import PageLayout from "@/components/layout/PageLayout";
 import HeroSection from "@/components/home/HeroSection";
 import FeaturedProducts from "@/components/home/FeaturedProducts";
 import AboutSection from "@/components/home/AboutSection";
 import TestimonialSection from "@/components/home/TestimonialSection";
 import ContactSection from "@/components/home/ContactSection";
-import { useEffect } from "react";
 
 const Index = () => {
   // Scroll to top on page load
@@ -15,17 +14,13 @@ const Index = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-grow">
-        <HeroSection />
-        <FeaturedProducts />
-        <AboutSection />
-        <TestimonialSection />
-        <ContactSection />
-      </main>
-      <Footer />
-    </div>
+    <PageLayout>
+      <HeroSection />
+      <FeaturedProducts />
+      <AboutSection />
+      <TestimonialSection />
+      <ContactSection />
+    </PageLayout>
   );
 };
 

@@ -4,8 +4,8 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { toast } from "sonner";
 import { Tables } from "@/integrations/supabase/types";
+import { useCart } from "@/context/CartContext";
 
 type ProductProps = {
   product: Tables<"products">;
@@ -13,13 +13,15 @@ type ProductProps = {
 
 export function ProductCard({ product }: ProductProps) {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const { addToCart } = useCart();
   
   const handleAddToCart = () => {
     setIsAddingToCart(true);
     
-    // Simulate adding to cart
+    // Add to cart
+    addToCart(product);
+    
     setTimeout(() => {
-      toast.success(`Added ${product.name} to cart!`);
       setIsAddingToCart(false);
     }, 500);
   };

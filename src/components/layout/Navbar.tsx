@@ -11,11 +11,13 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/context/CartContext";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [cartCount, setCartCount] = useState(0); // Will be replaced with real cart state
   const { user, profile, signOut } = useAuth();
+  const { getCartCount } = useCart();
+  const cartCount = getCartCount();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md">
@@ -126,6 +128,13 @@ const Navbar = () => {
               onClick={() => setIsOpen(false)}
             >
               Contact
+            </Link>
+            <Link
+              to="/cart"
+              className="text-sm font-medium transition-colors hover:text-aqua-700"
+              onClick={() => setIsOpen(false)}
+            >
+              Cart ({cartCount})
             </Link>
             {!user && (
               <Link 
