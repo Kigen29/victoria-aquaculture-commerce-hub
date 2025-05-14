@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FcGoogle } from "react-icons/fc";
 import { Navigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export default function Auth() {
   const { user, signIn, signUp, signInWithGoogle, loading } = useAuth();
@@ -16,6 +17,69 @@ export default function Auth() {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  
+  const [addressSuggestions, setAddressSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Nairobi locations for address autocomplete
+  const nairobiLocations = [
+    "Westlands, Nairobi",
+    "Kilimani, Nairobi",
+    "Kileleshwa, Nairobi",
+    "Lavington, Nairobi",
+    "Karen, Nairobi",
+    "Parklands, Nairobi",
+    "Gigiri, Nairobi",
+    "South B, Nairobi",
+    "South C, Nairobi",
+    "Eastleigh, Nairobi",
+    "Umoja, Nairobi",
+    "Kasarani, Nairobi",
+    "Roysambu, Nairobi",
+    "Kitisuru, Nairobi",
+    "Runda, Nairobi",
+    "Muthaiga, Nairobi",
+    "Langata, Nairobi",
+    "Embakasi, Nairobi",
+    "Donholm, Nairobi",
+    "Buruburu, Nairobi"
+  ];
+
+  // Filter address suggestions based on user input
+  const handleAddressChange = (value: string) => {
+    setAddress(value);
+    
+    if (value.trim()) {
+      const filtered = nairobiLocations.filter(location => 
+        location.toLowerCase().includes(value.toLowerCase())
+      );
+      setAddressSuggestions(filtered);
+      setShowSuggestions(filtered.length > 0);
+    } else {
+      setAddressSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleSelectAddress = (location: string) => {
+    setAddress(location);
+    setShowSuggestions(false);
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!fullName || !email || !password || !phone || !address) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+    
+    try {
+      await signUp(email, password, fullName, phone, address);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to sign up");
+    }
+  };
 
   // If user is already logged in, redirect to shop
   if (user) {
@@ -75,10 +139,7 @@ export default function Auth() {
             </TabsContent>
             <TabsContent value="signup">
               <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  signUp(email, password, fullName, phone, address);
-                }}
+                onSubmit={handleSignUp}
                 className="space-y-4"
               >
                 <div className="space-y-2">
@@ -110,27 +171,44 @@ export default function Auth() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    minLength={6}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-phone">Phone</Label>
                   <Input
                     id="signup-phone"
-                    placeholder="+1234567890"
+                    placeholder="+254 700 000 000"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     required
                   />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 relative">
                   <Label htmlFor="signup-address">Address</Label>
                   <Input
                     id="signup-address"
-                    placeholder="123 Main St, City, Country"
+                    placeholder="Enter your address in Nairobi"
                     value={address}
-                    onChange={(e) => setAddress(e.target.value)}
+                    onChange={(e) => handleAddressChange(e.target.value)}
                     required
+                    onFocus={() => address && setShowSuggestions(addressSuggestions.length > 0)}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                   />
+                  
+                  {showSuggestions && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                      {addressSuggestions.map((suggestion, index) => (
+                        <div
+                          key={index}
+                          className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                          onClick={() => handleSelectAddress(suggestion)}
+                        >
+                          {suggestion}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Creating Account..." : "Create Account"}

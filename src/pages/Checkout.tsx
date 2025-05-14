@@ -8,6 +8,7 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import PageLayout from "@/components/layout/PageLayout";
+import { AddressAutocomplete } from "@/components/checkout/AddressAutocomplete";
 
 // Add Paystack types
 declare global {
@@ -70,11 +71,23 @@ export default function Checkout() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paystackLoaded, setPaystackLoaded] = useState(false);
   const [formData, setFormData] = useState({
-    fullName: profile?.full_name || '',
-    email: user?.email || '',
-    phone: profile?.phone || '',
-    address: profile?.address || '',
+    fullName: '',
+    email: '',
+    phone: '',
+    address: '',
   });
+
+  // Populate form data from profile when component loads
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        fullName: profile.full_name || '',
+        email: user?.email || '',
+        phone: profile.phone || '',
+        address: profile.address || '',
+      });
+    }
+  }, [profile, user]);
 
   useEffect(() => {
     if (cartItems.length === 0) {
@@ -328,13 +341,9 @@ export default function Checkout() {
                   <label htmlFor="address" className="block text-sm font-medium mb-1">
                     Delivery Address
                   </label>
-                  <Input 
-                    id="address" 
-                    name="address"
-                    placeholder="123 Main St, Nairobi, Kenya"
+                  <AddressAutocomplete
                     value={formData.address}
-                    onChange={handleInputChange}
-                    required
+                    onChange={(value) => setFormData(prev => ({ ...prev, address: value }))}
                   />
                 </div>
               </div>
