@@ -9,29 +9,29 @@ const sampleProducts = [
   {
     id: "1",
     name: "Fresh Tilapia",
-    price: 12.99,
-    image: "https://images.unsplash.com/photo-1511994298241-608e28f14fde?auto=format&fit=crop&q=80&w=500", // Fish
+    price: 1200,
+    image: "https://res.cloudinary.com/dq74qwvfm/image/upload/v1747224720/Fresh_tilapia_fish_for_cooking_food_two_raw_nile_tilapia_freshwater_fish_with_salt_on_wooden_wooden_board___Premium_Photo_y2wrih.jpg", // Fish
     category: "fish"
   },
   {
     id: "2",
     name: "Nile Perch Fillet",
-    price: 18.99,
-    image: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&q=80&w=500", // Fish
+    price: 1200,
+    image: "https://res.cloudinary.com/dq74qwvfm/image/upload/v1747223784/tilapia-raw_czind9.jpg", // Fish
     category: "fish"
   },
   {
     id: "3",
     name: "Free Range Chicken",
-    price: 15.99,
-    image: "https://images.unsplash.com/photo-1587593810167-a84920ea0781?auto=format&fit=crop&q=80&w=500", // Chicken
+    price: 1200,
+    image: "https://res.cloudinary.com/dq74qwvfm/image/upload/v1747224720/Chicken_Bread_Rolls___Metro_peo0ub.jpg", // Chicken
     category: "chicken"
   },
   {
     id: "4",
     name: "Organic Chicken Wings",
-    price: 9.99,
-    image: "https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=500", // Chicken
+    price: 1200,
+    image: "https://res.cloudinary.com/dq74qwvfm/image/upload/v1747224720/Premium_Chicken_Wings_-_1kg_aojsa7.jpg", // Chicken
     category: "chicken"
   }
 ];
@@ -48,7 +48,7 @@ const ProductCard = ({ product }: { product: any }) => {
       </div>
       <div className="p-4 flex flex-col flex-grow">
         <h3 className="font-semibold text-lg">{product.name}</h3>
-        <p className="text-aqua-700 font-bold mt-2">${product.price.toFixed(2)}</p>
+        <p className="text-aqua-700 font-bold mt-2">KES{product.price.toFixed(2)}</p>
         <div className="mt-auto pt-4">
           <Button className="w-full gap-2">
             <ShoppingCart className="h-4 w-4" />
