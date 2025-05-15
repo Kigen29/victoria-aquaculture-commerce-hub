@@ -23,13 +23,14 @@ const Navbar = () => {
     <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link to="/" className="flex items-center">
-            <img 
-              src="/lovable-uploads/1157c102-a007-41ae-8fea-955280914e5c.png" 
-              alt="Lake Victoria Aquaculture Logo" 
-              className="h-24 md:h-12"
-            />
-          </Link>
+<Link to="/" className="flex items-center">
+  <img
+    src="/lovable-uploads/1157c102-a007-41ae-8fea-955280914e5c.png"
+    alt="Lake Victoria Aquaculture Logo"
+    className="h-32 md:h-24"    {/* ← now 8rem (128px) on mobile, 6rem (96px) on md+ */}
+  />
+</Link>
+
         </div>
 
         {/* Desktop navigation */}
