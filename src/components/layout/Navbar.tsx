@@ -22,7 +22,7 @@ const Navbar = () => {
     <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
-        <Link to="/" className="flex-shrink-0 h-12">
+        <Link to="/" className="flex-shrink-0 h-12 lg:h-40">
           <img
             src="/lovable-uploads/1157c102-a007-41ae-8fea-955280914e5c.png"
             alt="Lake Victoria Aquaculture Logo"
@@ -32,10 +32,10 @@ const Navbar = () => {
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-6">
-          {["Home", "Shop", "Blog", "About Us", "Contact"].map((label) => (
+          {['Home', 'Shop', 'Blog', 'About Us', 'Contact'].map((label) => (
             <Link
               key={label}
-              to={label === "Home" ? "/" : `/${label.toLowerCase().replace(/ /g, "")}`}
+              to={label === 'Home' ? '/' : `/${label.toLowerCase().replace(/ /g, '')}`}
               className="text-sm font-medium transition-colors hover:text-aqua-700"
             >
               {label}
@@ -43,7 +43,7 @@ const Navbar = () => {
           ))}
         </nav>
 
-        {/* Right‑hand icons & mobile menu button */}
+        {/* Right-hand icons & mobile menu button */}
         <div className="flex items-center gap-4">
           <Link to="/cart" className="relative">
             <ShoppingCart className="h-5 w-5" />
@@ -101,10 +101,10 @@ const Navbar = () => {
       {isOpen && (
         <div className="container mx-auto md:hidden py-4 px-4 animate-fade-in">
           <nav className="flex flex-col gap-4">
-            {["Home", "Shop", "Blog", "About Us", "Contact"].map((label) => (
+            {['Home', 'Shop', 'Blog', 'About Us', 'Contact'].map((label) => (
               <Link
                 key={label}
-                to={label === "Home" ? "/" : `/${label.toLowerCase().replace(/ /g, "")}`}
+                to={label === 'Home' ? '/' : `/${label.toLowerCase().replace(/ /g, '')}`}
                 className="text-sm font-medium transition-colors hover:text-aqua-700"
                 onClick={() => setIsOpen(false)}
               >
