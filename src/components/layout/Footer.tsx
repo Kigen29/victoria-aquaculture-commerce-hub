@@ -1,6 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { Facebook, Instagram, Twitter, Mail, Phone } from "lucide-react";
+import { NewsletterForm } from "@/components/newsletter/NewsletterForm";
 
 const Footer = () => {
   return (
@@ -44,6 +45,11 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
+                <Link to="/blog" className="text-gray-300 hover:text-white">
+                  Blog
+                </Link>
+              </li>
+              <li>
                 <Link to="/contact" className="text-gray-300 hover:text-white">
                   Contact
                 </Link>
@@ -78,16 +84,19 @@ const Footer = () => {
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold mb-4">Contact Us</h3>
-            <div className="space-y-3">
-              <p className="flex items-center text-gray-300">
-                <Mail size={16} className="mr-2" />
-                info@lakevictoriaaquaculture.com
-              </p>
-              <p className="flex items-center text-gray-300">
-                <Phone size={16} className="mr-2" />
-                +254 700 000 000
-              </p>
+            <NewsletterForm />
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold mb-2">Contact Us</h3>
+              <div className="space-y-3">
+                <p className="flex items-center text-gray-300">
+                  <Mail size={16} className="mr-2" />
+                  info@lakevictoriaaquaculture.com
+                </p>
+                <p className="flex items-center text-gray-300">
+                  <Phone size={16} className="mr-2" />
+                  +254 700 000 000
+                </p>
+              </div>
             </div>
           </div>
         </div>

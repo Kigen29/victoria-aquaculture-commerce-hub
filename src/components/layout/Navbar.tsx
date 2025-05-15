@@ -40,6 +40,9 @@ const Navbar = () => {
           <Link to="/shop" className="text-sm font-medium transition-colors hover:text-aqua-700">
             Shop
           </Link>
+          <Link to="/blog" className="text-sm font-medium transition-colors hover:text-aqua-700">
+            Blog
+          </Link>
           <Link to="/about" className="text-sm font-medium transition-colors hover:text-aqua-700">
             About Us
           </Link>
@@ -118,6 +121,13 @@ const Navbar = () => {
               onClick={() => setIsOpen(false)}
             >
               Shop
+            </Link>
+            <Link 
+              to="/blog" 
+              className="text-sm font-medium transition-colors hover:text-aqua-700"
+              onClick={() => setIsOpen(false)}
+            >
+              Blog
             </Link>
             <Link 
               to="/about" 

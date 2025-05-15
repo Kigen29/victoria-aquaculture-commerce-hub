@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Mail, Phone, MapPin } from "lucide-react";
+import { PromoSignupForm } from "../contact/PromoSignupForm";
 
 const ContactSection = () => {
   const handleSubmit = (e: React.FormEvent) => {
@@ -53,7 +54,7 @@ const ContactSection = () => {
             </form>
           </div>
 
-          <div className="flex flex-col justify-center">
+          <div>
             <div className="mb-8">
               <h3 className="text-xl font-semibold mb-4 text-aqua-800">Contact Information</h3>
               <div className="space-y-4">
@@ -90,7 +91,7 @@ const ContactSection = () => {
               </div>
             </div>
 
-            <div>
+            <div className="mb-8">
               <h3 className="text-xl font-semibold mb-4 text-aqua-800">Business Hours</h3>
               <div className="space-y-2">
                 <div className="flex justify-between">
@@ -106,6 +107,11 @@ const ContactSection = () => {
                   <span className="font-medium">Closed</span>
                 </div>
               </div>
+            </div>
+
+            <div>
+              <h3 className="text-xl font-semibold mb-4 text-aqua-800">Stay Connected</h3>
+              <PromoSignupForm />
             </div>
           </div>
         </div>
