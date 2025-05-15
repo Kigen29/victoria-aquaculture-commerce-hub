@@ -27,9 +27,15 @@ const Navbar = () => {
   <img
     src="/lovable-uploads/1157c102-a007-41ae-8fea-955280914e5c.png"
     alt="Lake Victoria Aquaculture Logo"
-    className="h-32 md:h-24"    {/* ← now 8rem (128px) on mobile, 6rem (96px) on md+ */}
+    className="
+      h-24           /* base (mobile) */
+      md:h-32        /* ≥768px (medium) */
+      lg:h-40        /* ≥1024px (large) */
+      xl:h-48        /* ≥1280px (extra‑large) */
+    "
   />
 </Link>
+
 
         </div>
 
