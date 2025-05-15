@@ -24,7 +24,7 @@ const Navbar = () => {
         {/* Logo */}
         <Link to="/" className="flex-shrink-0 h-12 lg:h-40">
           <img
-            src="/lovable-uploads/1157c102-a007-41ae-8fea-955280914e5c.png"
+            src="/lovable-uploads/Lake_Victoria_Aquaculture_Logo-removebg-preview.png"
             alt="Lake Victoria Aquaculture Logo"
             className="h-full w-auto object-contain"
           />
