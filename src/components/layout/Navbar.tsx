@@ -22,8 +22,7 @@ const Navbar = () => {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md">
       <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-4">
-<Link to="/" className="flex items-center">
+        <Link to="/" className="flex items-center">
   <img
     src="/lovable-uploads/1157c102-a007-41ae-8fea-955280914e5c.png"
     alt="Lake Victoria Aquaculture Logo"
@@ -35,10 +34,6 @@ const Navbar = () => {
     "
   />
 </Link>
-
-
-        </div>
-
         {/* Desktop navigation */}
         <nav className="hidden md:flex items-center gap-6">
           <Link to="/" className="text-sm font-medium transition-colors hover:text-aqua-700">
