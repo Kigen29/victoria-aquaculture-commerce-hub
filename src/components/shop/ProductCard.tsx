@@ -78,7 +78,7 @@ export function ProductCard({ product }: ProductProps) {
       
       <CardContent className="pt-4 pb-0 flex-grow">
         <h3 className="font-semibold text-lg mb-1">{product.name}</h3>
-        <p className="text-aqua-700 font-bold">${Number(product.price).toFixed(2)}</p>
+        <p className="text-aqua-700 font-bold">KES {Number(product.price).toFixed(2)}</p>
         {product.description && (
           <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{product.description}</p>
         )}

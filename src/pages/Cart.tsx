@@ -94,7 +94,7 @@ export default function Cart() {
                   
                   <div className="flex-grow">
                     <h3 className="font-semibold">{product.name}</h3>
-                    <p className="text-aqua-700 font-bold">${Number(product.price).toFixed(2)}</p>
+                    <p className="text-aqua-700 font-bold">KES {Number(product.price).toFixed(2)}</p>
                     {product.description && (
                       <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{product.description}</p>
                     )}
@@ -145,7 +145,7 @@ export default function Cart() {
                   {cartItems.map(({ product, quantity }) => (
                     <div key={product.id} className="flex justify-between text-sm">
                       <span>{product.name} × {quantity}</span>
-                      <span>${(Number(product.price) * quantity).toFixed(2)}</span>
+                      <span>KES {(Number(product.price) * quantity).toFixed(2)}</span>
                     </div>
                   ))}
                 </div>
@@ -153,7 +153,7 @@ export default function Cart() {
                 <div className="border-t pt-4 mt-4">
                   <div className="flex justify-between font-semibold">
                     <span>Total</span>
-                    <span>${getCartTotal().toFixed(2)}</span>
+                    <span>KES {getCartTotal().toFixed(2)}</span>
                   </div>
                 </div>
                 

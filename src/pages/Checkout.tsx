@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -223,7 +222,7 @@ export default function Checkout() {
         key: "pk_test_a256c089716ea27c62566facf11a7df853debcfb", // Replace with your Paystack public key
         email: formData.email,
         amount: amount,
-        currency: "NGN",
+        currency: "KES", // Changed from NGN to KES
         ref: reference,
         firstname: formData.fullName.split(' ')[0],
         lastname: formData.fullName.split(' ').slice(1).join(' '),
@@ -370,7 +369,7 @@ export default function Checkout() {
                         <span>{product.name} × {quantity}</span>
                       </div>
                     </div>
-                    <span>${(Number(product.price) * quantity).toFixed(2)}</span>
+                    <span>KES {(Number(product.price) * quantity).toFixed(2)}</span>
                   </div>
                 ))}
               </div>
@@ -378,7 +377,7 @@ export default function Checkout() {
               <div className="border-t pt-4">
                 <div className="flex justify-between font-semibold mb-2">
                   <span>Subtotal</span>
-                  <span>${getCartTotal().toFixed(2)}</span>
+                  <span>KES {getCartTotal().toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm mb-2">
                   <span>Shipping</span>
@@ -386,7 +385,7 @@ export default function Checkout() {
                 </div>
                 <div className="flex justify-between font-bold text-lg mt-4">
                   <span>Total</span>
-                  <span>${getCartTotal().toFixed(2)}</span>
+                  <span>KES {getCartTotal().toFixed(2)}</span>
                 </div>
               </div>
               

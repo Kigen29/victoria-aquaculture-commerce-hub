@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -48,7 +49,7 @@ const ProductCard = ({ product }: { product: any }) => {
       </div>
       <div className="p-4 flex flex-col flex-grow">
         <h3 className="font-semibold text-lg">{product.name}</h3>
-        <p className="text-aqua-700 font-bold mt-2">KES{product.price.toFixed(2)}</p>
+        <p className="text-aqua-700 font-bold mt-2">KES {product.price.toFixed(2)}</p>
         <div className="mt-auto pt-4">
           <Button className="w-full gap-2">
             <ShoppingCart className="h-4 w-4" />
