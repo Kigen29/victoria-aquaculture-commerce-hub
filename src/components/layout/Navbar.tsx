@@ -1,12 +1,11 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, ShoppingCart, User, LogOut } from "lucide-react";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
@@ -21,38 +20,30 @@ const Navbar = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md">
-      <div className="container flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center">
-  <img
-    src="/lovable-uploads/1157c102-a007-41ae-8fea-955280914e5c.png"
-    alt="Lake Victoria Aquaculture Logo"
-    className="
-      h-24           /* base (mobile) */
-      md:h-32        /* ≥768px (medium) */
-      lg:h-40        /* ≥1024px (large) */
-      xl:h-48        /* ≥1280px (extra‑large) */
-    "
-  />
-</Link>
-        {/* Desktop navigation */}
+      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+        {/* Logo */}
+        <Link to="/" className="flex-shrink-0 h-12">
+          <img
+            src="/lovable-uploads/1157c102-a007-41ae-8fea-955280914e5c.png"
+            alt="Lake Victoria Aquaculture Logo"
+            className="h-full w-auto object-contain"
+          />
+        </Link>
+
+        {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-6">
-          <Link to="/" className="text-sm font-medium transition-colors hover:text-aqua-700">
-            Home
-          </Link>
-          <Link to="/shop" className="text-sm font-medium transition-colors hover:text-aqua-700">
-            Shop
-          </Link>
-          <Link to="/blog" className="text-sm font-medium transition-colors hover:text-aqua-700">
-            Blog
-          </Link>
-          <Link to="/about" className="text-sm font-medium transition-colors hover:text-aqua-700">
-            About Us
-          </Link>
-          <Link to="/contact" className="text-sm font-medium transition-colors hover:text-aqua-700">
-            Contact
-          </Link>
+          {["Home", "Shop", "Blog", "About Us", "Contact"].map((label) => (
+            <Link
+              key={label}
+              to={label === "Home" ? "/" : `/${label.toLowerCase().replace(/ /g, "")}`}
+              className="text-sm font-medium transition-colors hover:text-aqua-700"
+            >
+              {label}
+            </Link>
+          ))}
         </nav>
 
+        {/* Right‑hand icons & mobile menu button */}
         <div className="flex items-center gap-4">
           <Link to="/cart" className="relative">
             <ShoppingCart className="h-5 w-5" />
@@ -77,15 +68,15 @@ const Navbar = () => {
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link to="/profile" className="cursor-pointer">Profile</Link>
+                  <Link to="/profile">Profile</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/orders" className="cursor-pointer">Orders</Link>
+                  <Link to="/orders">Orders</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={signOut} className="cursor-pointer">
+                <DropdownMenuItem onClick={signOut}>
                   <LogOut className="h-4 w-4 mr-2" />
-                  <span>Sign out</span>
+                  Sign out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -95,10 +86,10 @@ const Navbar = () => {
             </Button>
           )}
 
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="md:hidden" 
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
             onClick={() => setIsOpen(!isOpen)}
           >
             {isOpen ? <X /> : <Menu />}
@@ -106,45 +97,20 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile navigation */}
+      {/* Mobile nav */}
       {isOpen && (
-        <div className="container md:hidden py-4 animate-fade-in">
+        <div className="container mx-auto md:hidden py-4 px-4 animate-fade-in">
           <nav className="flex flex-col gap-4">
-            <Link 
-              to="/" 
-              className="text-sm font-medium transition-colors hover:text-aqua-700"
-              onClick={() => setIsOpen(false)}
-            >
-              Home
-            </Link>
-            <Link 
-              to="/shop" 
-              className="text-sm font-medium transition-colors hover:text-aqua-700"
-              onClick={() => setIsOpen(false)}
-            >
-              Shop
-            </Link>
-            <Link 
-              to="/blog" 
-              className="text-sm font-medium transition-colors hover:text-aqua-700"
-              onClick={() => setIsOpen(false)}
-            >
-              Blog
-            </Link>
-            <Link 
-              to="/about" 
-              className="text-sm font-medium transition-colors hover:text-aqua-700"
-              onClick={() => setIsOpen(false)}
-            >
-              About Us
-            </Link>
-            <Link 
-              to="/contact" 
-              className="text-sm font-medium transition-colors hover:text-aqua-700"
-              onClick={() => setIsOpen(false)}
-            >
-              Contact
-            </Link>
+            {["Home", "Shop", "Blog", "About Us", "Contact"].map((label) => (
+              <Link
+                key={label}
+                to={label === "Home" ? "/" : `/${label.toLowerCase().replace(/ /g, "")}`}
+                className="text-sm font-medium transition-colors hover:text-aqua-700"
+                onClick={() => setIsOpen(false)}
+              >
+                {label}
+              </Link>
+            ))}
             <Link
               to="/cart"
               className="text-sm font-medium transition-colors hover:text-aqua-700"
@@ -153,8 +119,8 @@ const Navbar = () => {
               Cart ({cartCount})
             </Link>
             {!user && (
-              <Link 
-                to="/auth" 
+              <Link
+                to="/auth"
                 className="text-sm font-medium transition-colors hover:text-aqua-700"
                 onClick={() => setIsOpen(false)}
               >
