@@ -41,7 +41,7 @@ const AboutSection = () => {
           <div className="order-1 lg:order-2 relative">
             <div className="aspect-square rounded-2xl overflow-hidden">
               <img 
-                src="https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?auto=format&fit=crop&q=80&w=800" 
+                src="https://res.cloudinary.com/dq74qwvfm/image/upload/v1747223784/tilapia-raw_czind9.jpg" 
                 alt="Lake Victoria" 
                 className="w-full h-full object-cover"
               />
