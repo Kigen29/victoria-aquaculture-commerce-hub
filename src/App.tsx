@@ -15,6 +15,9 @@ import OrderSuccess from "./pages/OrderSuccess";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import About from "./pages/About";
+import Contact from "./pages/Contact";
+import Profile from "./pages/Profile";
+import Orders from "./pages/Orders";
 import PrivateRoute from "./components/auth/PrivateRoute";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
@@ -38,12 +41,14 @@ const App = () => (
               <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="/about" element={<About />} />
               <Route path="/aboutus" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
               
               {/* Protected routes */}
               <Route element={<PrivateRoute />}>
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/order-success" element={<OrderSuccess />} />
-                {/* Will add more protected routes like /profile, /orders, etc. */}
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/orders" element={<Orders />} />
               </Route>
               
               {/* Catch-all route */}
