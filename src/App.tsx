@@ -14,6 +14,7 @@ import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
+import About from "./pages/About";
 import PrivateRoute from "./components/auth/PrivateRoute";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
@@ -35,6 +36,8 @@ const App = () => (
               <Route path="/cart" element={<Cart />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogPost />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/aboutus" element={<About />} />
               
               {/* Protected routes */}
               <Route element={<PrivateRoute />}>
