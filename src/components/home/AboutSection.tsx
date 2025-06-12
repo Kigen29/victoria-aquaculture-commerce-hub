@@ -8,11 +8,11 @@ const AboutSection = () => {
       <div className="container">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="order-2 lg:order-1">
-            <h2 className="text-3xl font-bold mb-6 text-aqua-800">About Lake Victoria Aquaculture</h2>
-            <p className="text-gray-600 mb-4">
-              Lake Victoria Aquaculture is a leading provider of high-quality fish and chicken products sourced directly from the pristine waters of Lake Victoria and our sustainable farms.
+            <h2 className="text-3xl font-bold mb-6 text-aqua-800">About Lake Victoria Aquaculture Limited</h2>
+            <p className="text-gray-600 mb-4 text-justify">
+              Lake Victoria Aquaculture Limited is dedicated to providing high-quality fish and chicken products to consumers. With a commitment to excellence and sustainability, the company partners with suppliers who align with their values to ensure only the freshest and highest quality products reach the market.
             </p>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 mb-6 text-justify">
               Our mission is to deliver fresh, sustainable, and delicious products to your table while supporting local communities and practicing responsible farming methods that protect our environment.
             </p>
             <div className="grid grid-cols-2 gap-4 mb-8">

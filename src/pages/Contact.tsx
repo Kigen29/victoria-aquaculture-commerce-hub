@@ -12,15 +12,13 @@ const Contact = () => {
   return (
     <PageLayout>
       {/* Hero Section */}
-      <section className="relative py-20 bg-gradient-to-r from-aqua-600 to-lake-600 text-white">
-        <div className="container">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">Contact Us</h1>
-            <p className="text-xl md:text-2xl text-aqua-100">
+      <section className="bg-gradient-to-r from-aqua-800 to-lake-600 text-white py-24">
+        <div className="container text-center">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">Contact Us</h1>
+            <p className="text-lg md:text-xl max-w-3xl mx-auto text-aqua-50">
               Get in touch with us for any questions or support
             </p>
           </div>
-        </div>
       </section>
 
       {/* Contact Section */}

@@ -10,16 +10,16 @@ const Footer = () => {
           <div>
             <h3 className="text-xl font-bold mb-4">Lake Victoria Aquaculture</h3>
             <p className="text-gray-300 mb-4">
-              Premium quality fish and chicken products sourced sustainably from Lake Victoria.
+              Ocean of Quality
             </p>
             <div className="flex space-x-4">
-              <Link to="#" className="text-gray-300 hover:text-white">
+              <Link to="https://www.facebook.com/15oCbzWVaL/" className="text-gray-300 hover:text-white" target="blank">
                 <Facebook size={20} />
               </Link>
-              <Link to="#" className="text-gray-300 hover:text-white">
+              <Link to="https://www.instagram.com/lakevictoriaaquaculture" className="text-gray-300 hover:text-white" target="blank">
                 <Instagram size={20} />
               </Link>
-              <Link to="#" className="text-gray-300 hover:text-white">
+              <Link to="#" className="text-gray-300 hover:text-white" target="blank">
                 <Twitter size={20} />
               </Link>
             </div>
@@ -93,7 +93,7 @@ const Footer = () => {
                 </p>
                 <p className="flex items-center text-gray-300">
                   <Phone size={16} className="mr-2" />
-                  +254 758 953 095
+                  +254 782 991 996
                 </p>
               </div>
             </div>

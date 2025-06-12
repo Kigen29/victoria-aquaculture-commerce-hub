@@ -13,11 +13,11 @@ const Blog = () => {
   return (
     <PageLayout>
       {/* Hero section */}
-      <div className="bg-gradient-to-r from-aqua-800 to-lake-600 text-white py-16">
+      <div className="bg-gradient-to-r from-aqua-800 to-lake-600 text-white py-24">
         <div className="container text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Our Blog</h1>
           <p className="text-lg md:text-xl max-w-3xl mx-auto text-aqua-50">
-            Discover delicious recipes, cooking tips, and stories about sustainable fishing and farming from Lake Victoria
+            Discover delicious recipes, cooking tips and stories 
           </p>
         </div>
       </div>

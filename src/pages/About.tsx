@@ -13,15 +13,13 @@ const About = () => {
   return (
     <PageLayout>
       {/* Hero Section */}
-      <section className="relative py-20 bg-gradient-to-r from-aqua-600 to-lake-600 text-white">
-        <div className="container">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">About Us</h1>
-            <p className="text-xl md:text-2xl text-aqua-100">
+      <section className="bg-gradient-to-r from-aqua-800 to-lake-600 text-white py-24">
+        <div className="container text-center">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">About Us</h1>
+            <p className="text-lg md:text-xl max-w-3xl mx-auto text-aqua-50">
               Dedicated to providing high-quality fish and chicken products with a commitment to excellence and sustainability
             </p>
           </div>
-        </div>
       </section>
 
       {/* Company Overview */}
@@ -30,11 +28,11 @@ const About = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl font-bold mb-6 text-aqua-800">Lake Victoria Aquaculture Limited</h2>
-              <p className="text-gray-600 mb-4">
-                Lake Victoria Aquaculture Limited is dedicated to providing high-quality fish and chicken products to consumers. With a commitment to excellence and sustainability, the company partners with suppliers who align with their values to ensure only the freshest and highest quality products reach the market.
+              <p className="text-gray-600 mb-4 text-justify" >
+                Lake Victoria Aquaculture Limited is dedicated to providing high-quality fish and chicken products to consumers. With a commitment to excellence and sustainability, the company partners with suppliers who align with their values to ensure only the freshest and highest quality products reach the market. We serve customers locally and potentially on a broader scale, aiming to meet the needs of seafood and poultry enthusiasts who prioritize quality and affordability.
               </p>
-              <p className="text-gray-600 mb-6">
-                We serve customers locally and potentially on a broader scale, aiming to meet the needs of seafood and poultry enthusiasts who prioritize quality and affordability.
+              <p className="text-gray-600 mb-6 text-justify">
+                Additionally, we maintain stringent quality assurance processes to uphold the highest standards of product quality and safety, providing consumers with peace of mind.The company's commitment to quality, affordability, and exceptional customer service sets it apart in the seafood and poultry market, providing a competitive edge. Lake Victoria Aquaculture Limited aims to expand its market reach while continuing to prioritize product quality, sustainability, and customer satisfaction.
               </p>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-lake-50 p-4 rounded-lg text-center">
