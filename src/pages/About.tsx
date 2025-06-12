@@ -17,7 +17,7 @@ const About = () => {
         <div className="container text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">About Us</h1>
             <p className="text-lg md:text-xl max-w-3xl mx-auto text-aqua-50">
-              Dedicated to providing high-quality fish and chicken products with a commitment to excellence and sustainability
+              Dedicated to providing high-quality fish and chicken products.
             </p>
           </div>
       </section>
