@@ -26,8 +26,8 @@ interface CreateOrderRequest {
 
 // Pesapal Configuration
 const PESAPAL_CONFIG = {
-  CONSUMER_KEY: 'ejgdSDn0RRYmjYwTKP6q9b74y8F1hHI5',
-  CONSUMER_SECRET: 'YGtc9q6gm9sLG/RjWxLIux9tOyM=',
+  CONSUMER_KEY: Deno.env.get('PESAPAL_CONSUMER_KEY') || '',
+  CONSUMER_SECRET: Deno.env.get('PESAPAL_CONSUMER_SECRET') || '',
   BASE_URL: 'https://cybqa.pesapal.com/pesapalv3', // Sandbox
   IPN_URL: `${Deno.env.get('SUPABASE_URL')}/functions/v1/pesapal-callback`,
   CALLBACK_URL: `${Deno.env.get('SITE_URL') || 'https://50943c0f-e074-4ea1-abdd-3e28af151c6c.lovableproject.com'}/order-success`,
