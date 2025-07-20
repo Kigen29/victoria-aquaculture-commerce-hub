@@ -1,7 +1,7 @@
 // Pesapal Configuration Constants
 export const PESAPAL_CONFIG = {
-  CONSUMER_KEY: 'ejgdSDn0RRYmjYwTKP6q9b74y8F1hHI5',
-  CONSUMER_SECRET: 'YGtc9q6gm9sLG/RjWxLIux9tOyM=',
+  CONSUMER_KEY: process.env.PESAPAL_CONSUMER_KEY,
+  CONSUMER_SECRET: process.env.PESAPAL_CONSUMER_SECRET,
   BASE_URL: 'https://cybqa.pesapal.com/pesapalv3', // Sandbox URL
   IPN_URL: `${window.location.origin}/api/pesapal/callback`,
   CALLBACK_URL: `${window.location.origin}/order-success`,
