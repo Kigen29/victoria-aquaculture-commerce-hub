@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
@@ -6,31 +7,13 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface OrderItem {
-  product_id: string;
-  quantity: number;
-  unit_price: number;
-}
-
-interface CreateOrderRequest {
-  user_id: string;
-  items: OrderItem[];
-  customer_info: {
-    full_name: string;
-    email: string;
-    phone: string;
-    address: string;
-  };
-  total_amount: number;
-}
-
 // Pesapal Configuration
 const PESAPAL_CONFIG = {
   CONSUMER_KEY: Deno.env.get('PESAPAL_CONSUMER_KEY') || '',
   CONSUMER_SECRET: Deno.env.get('PESAPAL_CONSUMER_SECRET') || '',
-  BASE_URL: 'https://cybqa.pesapal.com/pesapalv3', // Sandbox
-  IPN_URL: `${Deno.env.get('SUPABASE_URL')}/functions/v1/pesapal-callback`,
-  CALLBACK_URL: `${Deno.env.get('SITE_URL') || 'https://50943c0f-e074-4ea1-abdd-3e28af151c6c.lovableproject.com'}/order-success`,
+  BASE_URL: 'https://cybqa.pesapal.com/pesapalv3',
+  IPN_URL: 'https://mdkexfslutqzwoqfyxil.supabase.co/functions/v1/pesapal-callback',
+  REDIRECT_URL: 'https://50943c0f-e074-4ea1-abdd-3e28af151c6c.lovableproject.com/order-success',
 };
 
 class PesapalService {
@@ -53,12 +36,17 @@ class PesapalService {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to get Pesapal token: ${response.statusText}`);
+      throw new Error(`Failed to get Pesapal token: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
-    if (data.error) {
+    
+    if (data.error && data.error.message) {
       throw new Error(`Pesapal Auth Error: ${data.error.message}`);
+    }
+
+    if (!data.token) {
+      throw new Error('No token received from Pesapal');
     }
 
     this.token = data.token;
@@ -67,14 +55,16 @@ class PesapalService {
   }
 
   async registerIPN(): Promise<string> {
-    if (this.ipnId) return this.ipnId;
+    if (this.ipnId) {
+      return this.ipnId;
+    }
 
     const token = await this.getPesapalToken();
     const response = await fetch(`${PESAPAL_CONFIG.BASE_URL}/api/URLSetup/RegisterIPN`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         url: PESAPAL_CONFIG.IPN_URL,
@@ -83,12 +73,17 @@ class PesapalService {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to register IPN: ${response.statusText}`);
+      throw new Error(`Failed to register IPN: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
-    if (data.error) {
-      throw new Error(`Pesapal IPN Error: ${data.error.message}`);
+    
+    if (data.error && data.error.message) {
+      throw new Error(`IPN Registration Error: ${data.error.message}`);
+    }
+
+    if (!data.ipn_id) {
+      throw new Error('No IPN ID received from Pesapal');
     }
 
     this.ipnId = data.ipn_id;
@@ -102,8 +97,8 @@ class PesapalService {
     const response = await fetch(`${PESAPAL_CONFIG.BASE_URL}/api/Transactions/SubmitOrderRequest`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         ...orderData,
@@ -112,12 +107,13 @@ class PesapalService {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to create payment order: ${response.statusText}`);
+      throw new Error(`Failed to create payment order: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
-    if (data.error) {
-      throw new Error(`Pesapal Order Error: ${data.error.message}`);
+    
+    if (data.error && data.error.message) {
+      throw new Error(`Payment Order Error: ${data.error.message}`);
     }
 
     return data;
@@ -129,51 +125,45 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  if (req.method !== 'POST') {
-    return new Response('Method not allowed', { 
-      status: 405, 
-      headers: corsHeaders 
-    });
-  }
-
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const requestData: CreateOrderRequest = await req.json();
+    const requestData = await req.json();
     console.log('Creating Pesapal order:', requestData);
 
-    // Validate request data
-    if (!requestData.user_id || !requestData.items || !requestData.customer_info) {
-      throw new Error('Missing required order data');
-    }
+    const { user_id, items, customer_info, total_amount } = requestData;
 
-    // Create order in database
+    // Create order in database first
+    const orderId = crypto.randomUUID();
+    const merchantReference = `ORDER-${orderId}`;
+
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
-        user_id: requestData.user_id,
-        total_amount: requestData.total_amount,
+        id: orderId,
+        user_id,
+        total_amount,
         status: 'pending'
       })
       .select()
       .single();
 
     if (orderError) {
-      console.error('Database error creating order:', orderError);
-      throw new Error('Failed to create order in database');
+      console.error('Failed to create order:', orderError);
+      throw new Error(`Failed to create order: ${orderError.message}`);
     }
 
     console.log('Order created in database:', order);
 
     // Create order items
-    const orderItems = requestData.items.map(item => ({
-      order_id: order.id,
+    const orderItems = items.map((item: any) => ({
+      order_id: orderId,
       product_id: item.product_id,
       quantity: item.quantity,
-      unit_price: item.unit_price
+      unit_price: item.unit_price,
     }));
 
     const { error: itemsError } = await supabase
@@ -181,97 +171,97 @@ const handler = async (req: Request): Promise<Response> => {
       .insert(orderItems);
 
     if (itemsError) {
-      console.error('Database error creating order items:', itemsError);
-      throw new Error('Failed to create order items');
+      console.error('Failed to create order items:', itemsError);
+      throw new Error(`Failed to create order items: ${itemsError.message}`);
     }
 
-    // Update user profile
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({
-        full_name: requestData.customer_info.full_name,
-        phone: requestData.customer_info.phone,
-        address: requestData.customer_info.address,
-        email: requestData.customer_info.email
-      })
-      .eq('id', requestData.user_id);
-
-    if (profileError) {
-      console.error('Profile update error:', profileError);
-      // Don't throw error for profile update failure
-    }
-
-    // Create Pesapal payment order
-    const pesapalService = new PesapalService();
-    const merchantReference = `ORDER-${order.id}`;
-    
+    // Prepare Pesapal order data
     const pesapalOrderData = {
       id: merchantReference,
       currency: 'KES',
-      amount: requestData.total_amount,
-      description: `Order ${order.id} - ${requestData.items.length} items`,
-      callback_url: PESAPAL_CONFIG.CALLBACK_URL,
+      amount: total_amount,
+      description: `Payment for Order ${orderId}`,
+      callback_url: `${PESAPAL_CONFIG.REDIRECT_URL}?OrderTrackingId={OrderTrackingId}&OrderMerchantReference=${merchantReference}`,
       billing_address: {
-        email_address: requestData.customer_info.email,
-        phone_number: requestData.customer_info.phone,
+        email_address: customer_info.email,
+        phone_number: customer_info.phone,
+        first_name: customer_info.full_name.split(' ')[0],
+        last_name: customer_info.full_name.split(' ').slice(1).join(' ') || customer_info.full_name.split(' ')[0],
+        line_1: customer_info.address,
         country_code: 'KE',
-        first_name: requestData.customer_info.full_name.split(' ')[0],
-        last_name: requestData.customer_info.full_name.split(' ').slice(1).join(' ') || '',
-        line_1: requestData.customer_info.address,
-        city: 'Nairobi',
-        state: 'Nairobi',
-        postal_code: '00100',
-        zip_code: '00100'
-      }
+      },
     };
 
-    const pesapalResponse = await pesapalService.createPaymentOrder(pesapalOrderData);
-    console.log('Pesapal order created:', pesapalResponse);
+    // Create payment order with Pesapal
+    const pesapalService = new PesapalService();
+    const pesapalOrder = await pesapalService.createPaymentOrder(pesapalOrderData);
+    
+    console.log('Pesapal order created:', pesapalOrder);
 
-    // Store transaction details
-    const { error: transactionError } = await supabase
-      .from('pesapal_transactions')
-      .insert({
-        order_id: order.id,
-        pesapal_tracking_id: pesapalResponse.order_tracking_id,
-        merchant_reference: merchantReference,
-        iframe_url: pesapalResponse.redirect_url,
-        status: 'PENDING',
-        amount: requestData.total_amount,
-        currency: 'KES',
-        customer_phone: requestData.customer_info.phone
-      });
-
-    if (transactionError) {
-      console.error('Transaction storage error:', transactionError);
-      throw new Error('Failed to store transaction details');
+    if (!pesapalOrder.order_tracking_id || !pesapalOrder.redirect_url) {
+      throw new Error('Invalid response from Pesapal: missing tracking ID or redirect URL');
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        order_id: order.id,
-        iframe_url: pesapalResponse.redirect_url,
-        tracking_id: pesapalResponse.order_tracking_id
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      }
-    );
+    // Create transaction record with proper linking
+    const { data: transaction, error: transactionError } = await supabase
+      .from('pesapal_transactions')
+      .insert({
+        order_id: orderId,
+        pesapal_tracking_id: pesapalOrder.order_tracking_id,
+        merchant_reference: merchantReference,
+        amount: total_amount,
+        currency: 'KES',
+        status: 'PENDING',
+        iframe_url: pesapalOrder.redirect_url,
+        customer_phone: customer_info.phone,
+      })
+      .select()
+      .single();
+
+    if (transactionError) {
+      console.error('Failed to create transaction:', transactionError);
+      throw new Error(`Failed to create transaction: ${transactionError.message}`);
+    }
+
+    // Update order with transaction ID to establish the link
+    const { error: updateOrderError } = await supabase
+      .from('orders')
+      .update({ pesapal_transaction_id: transaction.id })
+      .eq('id', orderId);
+
+    if (updateOrderError) {
+      console.error('Failed to link order to transaction:', updateOrderError);
+      // Don't throw here as the payment can still proceed
+    }
+
+    console.log('Transaction created and linked:', transaction);
+
+    return new Response(JSON.stringify({
+      success: true,
+      order_id: orderId,
+      tracking_id: pesapalOrder.order_tracking_id,
+      iframe_url: pesapalOrder.redirect_url,
+      merchant_reference: merchantReference,
+    }), {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json',
+      },
+    });
 
   } catch (error: any) {
     console.error('Error in create-pesapal-order:', error);
-    return new Response(
-      JSON.stringify({ 
-        error: error.message || 'Internal server error',
-        success: false 
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      }
-    );
+    
+    return new Response(JSON.stringify({
+      success: false,
+      error: error.message || 'Internal server error',
+    }), {
+      status: 500,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json',
+      },
+    });
   }
 };
 

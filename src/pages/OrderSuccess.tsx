@@ -7,13 +7,14 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle, ShoppingBag, Home, Clock, AlertCircle } from "lucide-react";
 import { useOrderTracking } from "@/hooks/useOrderTracking";
 import { Badge } from "@/components/ui/badge";
+import { PaymentRecovery } from "@/components/payment/PaymentRecovery";
 
 export default function OrderSuccess() {
   const location = useLocation();
   const navigate = useNavigate();
   const { orderId } = location.state || {};
 
-  const { orderStatus, loading, isPaymentPending, isPaymentCompleted, isPaymentFailed } = useOrderTracking({
+  const { orderStatus, loading, isPaymentPending, isPaymentCompleted, isPaymentFailed, refetch } = useOrderTracking({
     orderId: orderId || '',
     enablePolling: true,
     onPaymentSuccess: () => {
@@ -101,6 +102,16 @@ export default function OrderSuccess() {
               </div>
             )}
           </div>
+
+          {/* Show payment recovery for pending payments */}
+          {isPaymentPending && (
+            <div className="mb-6">
+              <PaymentRecovery 
+                orderId={orderId} 
+                onStatusUpdated={() => refetch()}
+              />
+            </div>
+          )}
           
           {!isPaymentFailed && (
             <p className="text-sm text-muted-foreground mb-6">

@@ -40,8 +40,8 @@ class PesapalService {
     }
 
     const data = await response.json();
-    if (data.error) {
-      throw new Error(`Pesapal Auth Error: ${data.error.message || data.error.description || 'Unknown error'}`);
+    if (data.error && data.error.message) {
+      throw new Error(`Pesapal Auth Error: ${data.error.message}`);
     }
 
     if (!data.token) {
@@ -76,19 +76,19 @@ class PesapalService {
       const data = await response.json();
       console.log('Raw Pesapal response:', JSON.stringify(data, null, 2));
 
-      // Handle different response formats
-      if (data.error) {
-        throw new Error(`Pesapal Status Error: ${data.error.message || data.error.description || 'API Error'}`);
+      // The response is valid even if error object is present but null
+      if (data.error && data.error.message) {
+        throw new Error(`Pesapal Status Error: ${data.error.message}`);
       }
 
-      // Check if we have a valid response
-      if (!data || (data.payment_status_code === undefined && data.status_code === undefined)) {
+      // Check if we have valid transaction data
+      if (!data || (!data.status_code && !data.payment_status_code)) {
         if (retryCount < this.MAX_RETRIES) {
-          console.log(`Invalid response, retrying... (${retryCount + 1}/${this.MAX_RETRIES})`);
+          console.log(`No valid status data, retrying... (${retryCount + 1}/${this.MAX_RETRIES})`);
           await new Promise(resolve => setTimeout(resolve, this.RETRY_DELAY));
           return this.getTransactionStatus(orderTrackingId, retryCount + 1);
         }
-        throw new Error('Invalid response from Pesapal API after retries');
+        throw new Error('No valid status data from Pesapal API after retries');
       }
 
       return data;
@@ -141,8 +141,6 @@ async function updateTransactionAndOrder(
   console.log(`Starting atomic update: transaction ${transactionId}, order ${orderId}, status ${newStatus}`);
   
   try {
-    // Start a transaction-like operation by updating both tables
-    
     // 1. Update pesapal_transactions table
     const { error: updateTransactionError } = await supabase
       .from('pesapal_transactions')
@@ -158,7 +156,7 @@ async function updateTransactionAndOrder(
     }
     console.log('✅ Successfully updated pesapal_transactions table');
 
-    // 2. Update orders table
+    // 2. Update orders table with proper status and ensure transaction link
     let orderStatus = 'pending';
     if (newStatus === 'COMPLETED') {
       orderStatus = 'completed';
@@ -170,7 +168,7 @@ async function updateTransactionAndOrder(
       .from('orders')
       .update({ 
         status: orderStatus,
-        pesapal_transaction_id: transactionId // Ensure this link is set
+        pesapal_transaction_id: transactionId
       })
       .eq('id', orderId);
 
@@ -294,93 +292,82 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('📋 Pesapal transaction status response:', {
       payment_status_code: transactionStatus.payment_status_code,
       status_code: transactionStatus.status_code,
-      description: transactionStatus.description,
-      payment_status_description: transactionStatus.payment_status_description
+      description: transactionStatus.description || transactionStatus.payment_status_description,
+      message: transactionStatus.message
     });
 
-    // Determine status based on Pesapal response with enhanced logic
+    // Enhanced status mapping based on actual Pesapal response format
     let newStatus = 'PENDING';
-    const statusCode = transactionStatus.payment_status_code || transactionStatus.status_code;
-    const statusDescription = transactionStatus.description || transactionStatus.payment_status_description || '';
+    const statusCode = transactionStatus.status_code || transactionStatus.payment_status_code;
+    const statusDescription = (transactionStatus.payment_status_description || transactionStatus.description || '').toLowerCase();
     
     console.log('🎯 Status mapping input:', { statusCode, statusDescription });
     
-    // Enhanced status mapping
-    switch (String(statusCode)) {
-      case '1':
+    // Map status based on status_code (which seems to be the reliable field)
+    if (statusCode === 1 || statusCode === '1') {
+      newStatus = 'COMPLETED';
+    } else if (statusCode === 2 || statusCode === '2') {
+      newStatus = 'FAILED';
+    } else if (statusCode === 3 || statusCode === '3') {
+      newStatus = 'CANCELLED';
+    } else if (statusCode === 0 || statusCode === '0') {
+      newStatus = 'PENDING';
+    } else {
+      // Fallback to status description
+      if (statusDescription.includes('completed') || statusDescription.includes('successful')) {
         newStatus = 'COMPLETED';
-        break;
-      case '2':
+      } else if (statusDescription.includes('failed') || statusDescription.includes('error')) {
         newStatus = 'FAILED';
-        break;
-      case '3':
+      } else if (statusDescription.includes('cancelled')) {
         newStatus = 'CANCELLED';
-        break;
-      case '0':
-        newStatus = 'PENDING';
-        break;
-      default:
-        // Check status description for additional mapping
-        const descLower = statusDescription.toLowerCase();
-        if (descLower.includes('completed') || descLower.includes('successful') || descLower.includes('paid')) {
-          newStatus = 'COMPLETED';
-        } else if (descLower.includes('failed') || descLower.includes('error') || descLower.includes('declined')) {
-          newStatus = 'FAILED';
-        } else if (descLower.includes('cancelled') || descLower.includes('canceled')) {
-          newStatus = 'CANCELLED';
-        }
-        console.log(`⚠️ Unknown status code: ${statusCode}, mapped to: ${newStatus}`);
-        break;
+      }
+      console.log(`⚠️ Using fallback status mapping for code: ${statusCode}, mapped to: ${newStatus}`);
     }
 
     console.log(`🔄 Status mapping result: ${transaction.status} → ${newStatus}`);
 
-    // Only update if status has changed
-    if (transaction.status !== newStatus) {
-      console.log('💾 Updating transaction and order status...');
+    // Update transaction and order status
+    console.log('💾 Updating transaction and order status...');
+    
+    await updateTransactionAndOrder(
+      supabase,
+      transaction.id,
+      transaction.order_id,
+      newStatus,
+      transactionStatus
+    );
+
+    // Mark callback as processed
+    await supabase
+      .from('pesapal_callbacks')
+      .update({ processed: true })
+      .eq('pesapal_tracking_id', orderTrackingId)
+      .eq('processed', false);
+
+    // Send confirmation email if payment successful
+    if (newStatus === 'COMPLETED') {
+      console.log('📧 Sending confirmation email...');
       
-      await updateTransactionAndOrder(
-        supabase,
-        transaction.id,
-        transaction.order_id,
-        newStatus,
-        transactionStatus
-      );
+      const { data: order } = await supabase
+        .from('orders')
+        .select(`
+          id,
+          total_amount,
+          profiles!inner(email)
+        `)
+        .eq('id', transaction.order_id)
+        .single();
 
-      // Mark callback as processed
-      await supabase
-        .from('pesapal_callbacks')
-        .update({ processed: true })
-        .eq('pesapal_tracking_id', orderTrackingId)
-        .eq('processed', false);
-
-      // Send confirmation email if payment successful
-      if (newStatus === 'COMPLETED') {
-        console.log('📧 Sending confirmation email...');
-        
-        const { data: order } = await supabase
-          .from('orders')
-          .select(`
-            id,
-            total_amount,
-            profiles!inner(email)
-          `)
-          .eq('id', transaction.order_id)
-          .single();
-
-        if (order?.profiles?.email) {
-          await sendConfirmationEmail(order.profiles.email, {
-            order_id: transaction.order_id,
-            total_amount: transaction.amount,
-            confirmation_code: transactionStatus.confirmation_code || orderTrackingId
-          });
-        }
+      if (order?.profiles?.email) {
+        await sendConfirmationEmail(order.profiles.email, {
+          order_id: transaction.order_id,
+          total_amount: transaction.amount,
+          confirmation_code: transactionStatus.confirmation_code || orderTrackingId
+        });
       }
-
-      console.log(`✅ Transaction ${orderTrackingId} processed successfully. Status: ${newStatus}`);
-    } else {
-      console.log('ℹ️ Status unchanged, skipping update');
     }
+
+    console.log(`✅ Transaction ${orderTrackingId} processed successfully. Status: ${newStatus}`);
 
     return new Response('OK', { 
       status: 200, 

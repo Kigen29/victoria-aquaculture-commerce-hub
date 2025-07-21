@@ -1,8 +1,10 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, X, Shield, CreditCard } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useOrderTracking } from '@/hooks/useOrderTracking';
 
 interface PesapalPaymentFrameProps {
   iframeUrl: string;
@@ -23,6 +25,57 @@ const PesapalPaymentFrame = ({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const navigate = useNavigate();
 
+  // Track order status in real-time
+  const { orderStatus, isPaymentCompleted, isPaymentFailed } = useOrderTracking({
+    orderId,
+    enablePolling: true,
+    pollingInterval: 3000, // Check every 3 seconds
+    onPaymentSuccess: (status) => {
+      console.log('Payment successful detected via tracking:', status);
+      setPaymentCompleted(true);
+      setTimeout(() => {
+        navigate(`/order-success`, { state: { orderId } });
+      }, 2000);
+    },
+    onPaymentFailure: (status) => {
+      console.log('Payment failed detected via tracking:', status);
+      setError('Payment failed. Please try again.');
+    }
+  });
+
+  // Monitor URL changes in the iframe for payment completion
+  useEffect(() => {
+    const checkIframeUrl = () => {
+      try {
+        if (iframeRef.current && iframeRef.current.contentWindow) {
+          const iframeLocation = iframeRef.current.contentWindow.location;
+          const url = iframeLocation.href;
+          
+          // Check if URL contains success parameters
+          if (url.includes('OrderTrackingId') && url.includes('OrderMerchantReference')) {
+            console.log('Payment completion detected in iframe URL:', url);
+            
+            // Give some time for callback to process
+            setTimeout(() => {
+              if (!paymentCompleted) {
+                setPaymentCompleted(true);
+                setTimeout(() => {
+                  navigate(`/order-success`, { state: { orderId } });
+                }, 2000);
+              }
+            }, 3000);
+          }
+        }
+      } catch (error) {
+        // Cross-origin restrictions prevent access to iframe URL
+        // This is expected and normal
+      }
+    };
+
+    const interval = setInterval(checkIframeUrl, 2000);
+    return () => clearInterval(interval);
+  }, [orderId, navigate, paymentCompleted]);
+
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       // Security check - only accept messages from Pesapal domain
@@ -34,7 +87,7 @@ const PesapalPaymentFrame = ({
       if (event.data?.status === 'completed' || event.data?.type === 'payment_completed') {
         setPaymentCompleted(true);
         setTimeout(() => {
-          navigate(`/order-success?order=${orderId}`);
+          navigate(`/order-success`, { state: { orderId } });
         }, 2000);
       } else if (event.data?.status === 'failed' || event.data?.type === 'payment_failed') {
         setError('Payment failed. Please try again.');
@@ -52,6 +105,16 @@ const PesapalPaymentFrame = ({
     };
   }, [orderId, navigate, onCancel]);
 
+  // Auto-redirect on successful payment detection
+  useEffect(() => {
+    if (isPaymentCompleted && !paymentCompleted) {
+      setPaymentCompleted(true);
+      setTimeout(() => {
+        navigate(`/order-success`, { state: { orderId } });
+      }, 2000);
+    }
+  }, [isPaymentCompleted, orderId, navigate, paymentCompleted]);
+
   const handleIframeLoad = () => {
     setIsLoading(false);
     setError(null);
@@ -62,7 +125,7 @@ const PesapalPaymentFrame = ({
     setError('Failed to load payment page. Please try again.');
   };
 
-  if (paymentCompleted) {
+  if (paymentCompleted || isPaymentCompleted) {
     return (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
@@ -95,6 +158,11 @@ const PesapalPaymentFrame = ({
             <div>
               <h3 className="font-semibold">Secure Payment</h3>
               <p className="text-sm opacity-90">Order #{orderId} - KES {amount.toLocaleString()}</p>
+              {orderStatus && (
+                <p className="text-xs opacity-75">
+                  Status: {orderStatus.pesapalStatus || 'PENDING'}
+                </p>
+              )}
             </div>
           </div>
           <Button
@@ -117,14 +185,14 @@ const PesapalPaymentFrame = ({
             </div>
           )}
 
-          {error && (
+          {(error || isPaymentFailed) && (
             <div className="absolute inset-0 bg-white flex items-center justify-center z-10">
               <div className="text-center p-6">
                 <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <X className="w-8 h-8 text-red-600" />
                 </div>
                 <h3 className="text-lg font-semibold text-red-600 mb-2">Payment Error</h3>
-                <p className="text-muted-foreground mb-4">{error}</p>
+                <p className="text-muted-foreground mb-4">{error || 'Payment processing failed'}</p>
                 <div className="flex space-x-3 justify-center">
                   <Button variant="outline" onClick={onCancel}>
                     Cancel
