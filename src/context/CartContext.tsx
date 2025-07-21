@@ -2,6 +2,8 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./AuthContext";
 
 // Define product type from our database schema
 type Product = Tables<"products">;
@@ -29,6 +31,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 // Cart provider component
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const { user } = useAuth();
 
   // Load cart from localStorage on initial render
   useEffect(() => {
@@ -50,6 +53,42 @@ export function CartProvider({ children }: { children: ReactNode }) {
       console.error("Error saving cart to localStorage:", error);
     }
   }, [cartItems]);
+
+  // Listen for successful payments to clear cart
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel(`cart-updates-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'pesapal_transactions'
+        },
+        async (payload) => {
+          if (payload.new.status === 'COMPLETED') {
+            // Verify this transaction belongs to the current user
+            const { data: order } = await supabase
+              .from('orders')
+              .select('user_id')
+              .eq('pesapal_transaction_id', payload.new.id)
+              .single();
+              
+            if (order?.user_id === user.id) {
+              clearCart();
+              toast.success("Order completed! Cart cleared.");
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
 
   // Add item to cart
   const addToCart = (product: Product, quantity = 1) => {

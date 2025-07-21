@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, ShoppingCart, User, LogOut } from "lucide-react";
+import { Menu, X, ShoppingCart, User, LogOut, CreditCard } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
+import { PaymentStatusIndicator } from "@/components/payment/PaymentStatusIndicator";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -45,6 +47,7 @@ const Navbar = () => {
 
         {/* Right-hand icons & mobile menu button */}
         <div className="flex items-center gap-4">
+          <PaymentStatusIndicator />
           <Link to="/cart" className="relative">
             <ShoppingCart className="h-5 w-5" />
             {cartCount > 0 && (

@@ -21,6 +21,7 @@ import Orders from "./pages/Orders";
 import PrivateRoute from "./components/auth/PrivateRoute";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
+import { PaymentNotificationManager } from "./components/payment/PaymentNotificationManager";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <CartProvider>
+            <PaymentNotificationManager />
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<Index />} />

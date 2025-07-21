@@ -164,18 +164,18 @@ export function useOrderTracking({
     };
   }, [orderId, fetchOrderStatus]);
 
-  // Set up polling
+  // Set up polling with retry logic
   useEffect(() => {
     if (!enablePolling) return;
 
     const interval = setInterval(() => {
-      if (orderStatus?.pesapalStatus === 'PENDING') {
+      if (orderStatus?.pesapalStatus === 'PENDING' || orderStatus?.status === 'pending') {
         fetchOrderStatus();
       }
     }, pollingInterval);
 
     return () => clearInterval(interval);
-  }, [enablePolling, pollingInterval, orderStatus?.pesapalStatus, fetchOrderStatus]);
+  }, [enablePolling, pollingInterval, orderStatus?.pesapalStatus, orderStatus?.status, fetchOrderStatus]);
 
   // Initial fetch
   useEffect(() => {
@@ -189,6 +189,7 @@ export function useOrderTracking({
 
   return {
     orderStatus,
+    paymentStatus: orderStatus?.pesapalStatus || 'PENDING',
     loading,
     error,
     refetch,
