@@ -169,12 +169,40 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Determine status based on Pesapal response
     let newStatus = 'PENDING';
-    if (transactionStatus.payment_status_code === '1') {
-      newStatus = 'COMPLETED';
-    } else if (transactionStatus.payment_status_code === '2') {
-      newStatus = 'FAILED';
-    } else if (transactionStatus.payment_status_code === '3') {
-      newStatus = 'CANCELLED';
+    const statusCode = transactionStatus.payment_status_code;
+    const statusDescription = transactionStatus.description || '';
+    
+    console.log('Pesapal status details:', { statusCode, statusDescription });
+    
+    switch (statusCode) {
+      case '1':
+      case 1:
+        newStatus = 'COMPLETED';
+        break;
+      case '2':
+      case 2:
+        newStatus = 'FAILED';
+        break;
+      case '3':
+      case 3:
+        newStatus = 'CANCELLED';
+        break;
+      case '0':
+      case 0:
+        newStatus = 'PENDING';
+        break;
+      default:
+        // Check status description for additional mapping
+        const descLower = statusDescription.toLowerCase();
+        if (descLower.includes('completed') || descLower.includes('successful')) {
+          newStatus = 'COMPLETED';
+        } else if (descLower.includes('failed') || descLower.includes('error')) {
+          newStatus = 'FAILED';
+        } else if (descLower.includes('cancelled') || descLower.includes('canceled')) {
+          newStatus = 'CANCELLED';
+        }
+        console.log(`Unknown status code: ${statusCode}, mapped to: ${newStatus}`);
+        break;
     }
 
     // Update transaction status
