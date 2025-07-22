@@ -56,6 +56,7 @@ const Orders = () => {
           )
         `)
         .eq("user_id", user?.id)
+        .in("status", ["completed", "failed", "cancelled"])
         .order("created_at", { ascending: false });
 
       if (error) throw error;
