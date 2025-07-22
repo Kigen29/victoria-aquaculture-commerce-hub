@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { Resend } from "npm:resend@4.0.0";
@@ -12,7 +11,7 @@ const corsHeaders = {
 const PESAPAL_CONFIG = {
   CONSUMER_KEY: Deno.env.get('PESAPAL_CONSUMER_KEY') || '',
   CONSUMER_SECRET: Deno.env.get('PESAPAL_CONSUMER_SECRET') || '',
-  BASE_URL: 'https://cybqa.pesapal.com/pesapalv3', // Sandbox
+  BASE_URL: 'https://pay.pesapal.com/v3', // Production URL
 };
 
 class PesapalService {

@@ -11,7 +11,7 @@ const corsHeaders = {
 const PESAPAL_CONFIG = {
   CONSUMER_KEY: Deno.env.get('PESAPAL_CONSUMER_KEY') || '',
   CONSUMER_SECRET: Deno.env.get('PESAPAL_CONSUMER_SECRET') || '',
-  BASE_URL: 'https://cybqa.pesapal.com/pesapalv3',
+  BASE_URL: 'https://pay.pesapal.com/v3', // Production URL
   IPN_URL: 'https://mdkexfslutqzwoqfyxil.supabase.co/functions/v1/pesapal-callback',
   REDIRECT_URL: 'https://50943c0f-e074-4ea1-abdd-3e28af151c6c.lovableproject.com/order-success',
 };
