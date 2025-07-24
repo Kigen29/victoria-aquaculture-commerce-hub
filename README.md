@@ -1,73 +1,181 @@
-# Welcome to your Lovable project
+# Lake Victoria Aquaculture E-commerce Platform
 
-## Project info
+A modern e-commerce platform for Lake Victoria Aquaculture, built with React, TypeScript, and Supabase. This platform enables customers to browse and purchase aquaculture products, manage orders, and process payments through Pesapal integration.
 
-**URL**: https://lovable.dev/projects/50943c0f-e074-4ea1-abdd-3e28af151c6c
+## 🚀 Features
 
-## How can I edit this code?
+- **Product Catalog**: Browse aquaculture products with category filtering
+- **Shopping Cart**: Add/remove products with persistent cart state
+- **User Authentication**: Secure login/registration with Supabase Auth
+- **Payment Processing**: Integrated Pesapal payment gateway for secure transactions
+- **Order Management**: Track orders and view order history
+- **Blog System**: Content management for articles and updates
+- **Newsletter**: Email subscription functionality
+- **Responsive Design**: Mobile-first design with Tailwind CSS
+- **Admin Dashboard**: Manage products, orders, and content
 
-There are several ways of editing your application.
+## 🛠 Tech Stack
 
-**Use Lovable**
+- **Frontend**: React 18, TypeScript, Vite
+- **Styling**: Tailwind CSS, shadcn/ui components
+- **Backend**: Supabase (Database, Auth, Edge Functions)
+- **Payment**: Pesapal Gateway Integration
+- **State Management**: React Context API, TanStack Query
+- **Routing**: React Router DOM
+- **Deployment**: Lovable Platform
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/50943c0f-e074-4ea1-abdd-3e28af151c6c) and start prompting.
+## 📋 Prerequisites
 
-Changes made via Lovable will be committed automatically to this repo.
+- Node.js 18+ and npm
+- Supabase account and project
+- Pesapal merchant account (for payment processing)
 
-**Use your preferred IDE**
+## 🚀 Quick Start
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 1. Clone the Repository
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+```bash
 git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
 cd <YOUR_PROJECT_NAME>
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+### 2. Install Dependencies
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+npm install
+```
+
+### 3. Environment Setup
+
+Create a `.env` file in the root directory:
+
+```env
+# Supabase Configuration
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# Pesapal Configuration (for edge functions)
+PESAPAL_CONSUMER_KEY=your_pesapal_consumer_key
+PESAPAL_CONSUMER_SECRET=your_pesapal_consumer_secret
+```
+
+### 4. Database Setup
+
+1. Create a new Supabase project at [supabase.com](https://supabase.com)
+2. Run the database migrations found in `supabase/migrations/`
+3. Configure Row Level Security (RLS) policies for your tables
+4. Set up the required edge functions for payment processing
+
+### 5. Supabase Configuration
+
+Configure the following in your Supabase dashboard:
+
+- **Authentication**: Enable email/password and social providers as needed
+- **Edge Functions**: Deploy the Pesapal integration functions
+- **Secrets**: Add `PESAPAL_CONSUMER_KEY` and `PESAPAL_CONSUMER_SECRET`
+
+### 6. Start Development Server
+
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The application will be available at `http://localhost:5173`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 🏗 Project Structure
 
-**Use GitHub Codespaces**
+```
+src/
+├── components/          # Reusable UI components
+│   ├── auth/           # Authentication components
+│   ├── checkout/       # Checkout and payment components
+│   ├── home/           # Homepage sections
+│   ├── layout/         # Layout components (Navbar, Footer)
+│   ├── shop/           # Product catalog components
+│   └── ui/             # shadcn/ui base components
+├── context/            # React Context providers
+├── hooks/              # Custom React hooks
+├── integrations/       # Third-party integrations
+├── lib/                # Utility functions and configurations
+├── pages/              # Page components
+└── services/           # API service functions
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+supabase/
+├── functions/          # Edge functions for backend logic
+└── migrations/         # Database schema and migrations
+```
 
-## What technologies are used for this project?
+## 💳 Payment Integration
 
-This project is built with:
+The platform uses Pesapal for payment processing:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+1. **Order Creation**: Creates orders via Supabase edge function
+2. **Payment Processing**: Redirects to Pesapal payment page
+3. **Callback Handling**: Processes payment status updates
+4. **Order Completion**: Updates order status and sends confirmations
 
-## How can I deploy this project?
+## 🔒 Security Features
 
-Simply open [Lovable](https://lovable.dev/projects/50943c0f-e074-4ea1-abdd-3e28af151c6c) and click on Share -> Publish.
+- Row Level Security (RLS) on all database tables
+- User authentication with Supabase Auth
+- Secure payment processing through Pesapal
+- Input validation and sanitization
+- HTTPS enforcement in production
 
-## Can I connect a custom domain to my Lovable project?
+## 🚀 Deployment
 
-Yes, you can!
+### Lovable Platform (Recommended)
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+1. Connect your GitHub repository to Lovable
+2. Click "Publish" in the Lovable editor
+3. Configure custom domain if needed
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+### Manual Deployment
+
+```bash
+# Build for production
+npm run build
+
+# Deploy the dist/ folder to your hosting provider
+```
+
+## 🧪 Testing
+
+```bash
+# Run linting
+npm run lint
+
+# Type checking
+npm run type-check
+```
+
+## 📝 Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `VITE_SUPABASE_URL` | Supabase project URL | Yes |
+| `VITE_SUPABASE_ANON_KEY` | Supabase anonymous key | Yes |
+| `PESAPAL_CONSUMER_KEY` | Pesapal consumer key (edge functions) | Yes |
+| `PESAPAL_CONSUMER_SECRET` | Pesapal consumer secret (edge functions) | Yes |
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/new-feature`
+3. Commit changes: `git commit -am 'Add new feature'`
+4. Push to branch: `git push origin feature/new-feature`
+5. Submit a pull request
+
+## 📧 Support
+
+For support and questions:
+- Create an issue in this repository
+- Contact the development team
+
+## 📄 License
+
+This project is proprietary software for Lake Victoria Aquaculture.
+
+---
+
+Built with ❤️ for sustainable aquaculture
