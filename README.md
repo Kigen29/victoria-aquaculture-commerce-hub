@@ -22,7 +22,6 @@ A modern e-commerce platform for Lake Victoria Aquaculture, built with React, Ty
 - **Payment**: Pesapal Gateway Integration
 - **State Management**: React Context API, TanStack Query
 - **Routing**: React Router DOM
-- **Deployment**: Lovable Platform
 
 ## 📋 Prerequisites
 
@@ -80,8 +79,6 @@ Configure the following in your Supabase dashboard:
 npm run dev
 ```
 
-The application will be available at `http://localhost:5173`
-
 ## 🏗 Project Structure
 
 ```
@@ -116,19 +113,11 @@ The platform uses Pesapal for payment processing:
 
 ## 🔒 Security Features
 
-- Row Level Security (RLS) on all database tables
 - User authentication with Supabase Auth
 - Secure payment processing through Pesapal
 - Input validation and sanitization
 - HTTPS enforcement in production
 
-## 🚀 Deployment
-
-### Lovable Platform (Recommended)
-
-1. Connect your GitHub repository to Lovable
-2. Click "Publish" in the Lovable editor
-3. Configure custom domain if needed
 
 ### Manual Deployment
 
@@ -174,7 +163,7 @@ For support and questions:
 
 ## 📄 License
 
-This project is proprietary software for Lake Victoria Aquaculture.
+This project is proprietary software for Lake Victoria Aquaculture Limited.
 
 ---
 
