@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { fetchSecureTransactionData, logSensitiveDataAccess } from '@/lib/security-utils';
 
 export interface OrderStatus {
   orderId: string;
@@ -59,15 +60,26 @@ export function useOrderTracking({
         throw new Error('Order not found');
       }
 
+      
       let pesapalTransaction = null;
       if (order.pesapal_transaction_id) {
-        const { data: transaction } = await supabase
-          .from('pesapal_transactions')
-          .select('pesapal_tracking_id, status, amount, currency, updated_at')
-          .eq('id', order.pesapal_transaction_id)
-          .single();
-        
-        pesapalTransaction = transaction;
+        try {
+          // Use secure fetch to get transaction data with masked phone numbers
+          pesapalTransaction = await fetchSecureTransactionData(order.id);
+          
+          // Log access to sensitive transaction data
+          await logSensitiveDataAccess('VIEW_TRANSACTION', order.pesapal_transaction_id);
+        } catch (error) {
+          console.error('Error fetching secure transaction data:', error);
+          // Fallback to basic transaction data without phone numbers
+          const { data: transaction } = await supabase
+            .from('pesapal_transactions')
+            .select('pesapal_tracking_id, status, amount, currency, updated_at')
+            .eq('id', order.pesapal_transaction_id)
+            .single();
+          
+          pesapalTransaction = transaction;
+        }
       }
       
       const status: OrderStatus = {

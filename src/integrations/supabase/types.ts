@@ -308,7 +308,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      mask_customer_phone: {
+        Args: { phone_number: string }
+        Returns: string
+      }
+      user_owns_transaction: {
+        Args: { transaction_order_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       pesapal_status: "PENDING" | "COMPLETED" | "FAILED" | "CANCELLED"
