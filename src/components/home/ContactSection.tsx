@@ -89,7 +89,7 @@ const ContactSection = () => {
                   </div>
                 </div>
 
-                <div className="mt-6">
+                <div className="mt-6 rounded-lg overflow-hidden shadow-lg">
                   <iframe
                     src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3988.7695010082234!2d36.81391957477732!3d-1.3137747986737491!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x182f1057226f4869%3A0x3f7350ca6459738a!2sKogo%20Star%20Plaza%2C%20Nairobi!5e0!3m2!1sen!2ske!4v1714052242022!5m2!1sen!2ske"
                     width="100%"
@@ -98,6 +98,8 @@ const ContactSection = () => {
                     allowFullScreen
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
+                    title="Lake Victoria Aquaculture Limited Location"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     className="rounded-lg"
                   ></iframe>
                 </div>
