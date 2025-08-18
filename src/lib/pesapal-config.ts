@@ -1,7 +1,6 @@
 // Pesapal Configuration Constants
+// Note: Consumer keys are handled securely in the backend edge functions
 export const PESAPAL_CONFIG = {
-  CONSUMER_KEY: process.env.PESAPAL_CONSUMER_KEY,
-  CONSUMER_SECRET: process.env.PESAPAL_CONSUMER_SECRET,
   BASE_URL: 'https://pay.pesapal.com/v3', // Production URL
   IPN_URL: `${window.location.origin}/api/pesapal/callback`,
   CALLBACK_URL: `${window.location.origin}/order-success`,
