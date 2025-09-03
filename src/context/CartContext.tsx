@@ -68,18 +68,30 @@ export function CartProvider({ children }: { children: ReactNode }) {
           table: 'pesapal_transactions'
         },
         async (payload) => {
-          if (payload.new.status === 'COMPLETED') {
-            // Verify this transaction belongs to the current user
-            const { data: order } = await supabase
-              .from('orders')
-              .select('user_id')
-              .eq('pesapal_transaction_id', payload.new.id)
-              .single();
-              
-            if (order?.user_id === user.id) {
-              clearCart();
-              toast.success("Order completed! Cart cleared.");
+          console.log("CartContext: Payment transaction update received", payload.new);
+          
+          try {
+            if (payload.new.status === 'COMPLETED') {
+              // Verify this transaction belongs to the current user
+              const { data: order, error } = await supabase
+                .from('orders')
+                .select('user_id')
+                .eq('pesapal_transaction_id', payload.new.id)
+                .single();
+
+              if (error) {
+                console.error("CartContext: Error fetching order:", error);
+                return;
+              }
+                
+              if (order?.user_id === user.id) {
+                console.log("CartContext: Clearing cart for completed payment");
+                clearCart();
+                toast.success("Payment completed! Cart cleared.");
+              }
             }
+          } catch (error) {
+            console.error("CartContext: Error processing payment update:", error);
           }
         }
       )

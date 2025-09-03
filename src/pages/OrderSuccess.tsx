@@ -4,26 +4,39 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, ShoppingBag, Home, Clock, AlertCircle } from "lucide-react";
+import { CheckCircle, ShoppingBag, Home, Clock, AlertCircle, Trash2 } from "lucide-react";
 import { useOrderTracking } from "@/hooks/useOrderTracking";
 import { Badge } from "@/components/ui/badge";
 import { PaymentRecovery } from "@/components/payment/PaymentRecovery";
+import { useCart } from "@/context/CartContext";
+import { toast } from "sonner";
 
 export default function OrderSuccess() {
   const location = useLocation();
   const navigate = useNavigate();
   const { orderId } = location.state || {};
+  const { clearCart, getCartCount } = useCart();
 
   const { orderStatus, loading, isPaymentPending, isPaymentCompleted, isPaymentFailed, refetch } = useOrderTracking({
     orderId: orderId || '',
     enablePolling: true,
     onPaymentSuccess: () => {
-      // Could trigger additional success actions here
+      // Clear cart when payment succeeds as backup mechanism
+      clearCart();
+      toast.success("Payment successful! Cart cleared.");
     },
     onPaymentFailure: () => {
       // Could trigger failure handling here
     }
   });
+
+  // Clear cart when payment is completed (additional safety)
+  useEffect(() => {
+    if (isPaymentCompleted && getCartCount() > 0) {
+      clearCart();
+      console.log("OrderSuccess: Cart cleared due to completed payment");
+    }
+  }, [isPaymentCompleted, clearCart, getCartCount]);
 
   // Redirect if accessed directly without an order ID
   useEffect(() => {
@@ -133,6 +146,24 @@ export default function OrderSuccess() {
               </Link>
             </Button>
           </div>
+          
+          {/* Manual cart clear button if items still remain */}
+          {getCartCount() > 0 && (
+            <div className="mt-4">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => {
+                  clearCart();
+                  toast.success("Cart cleared manually");
+                }}
+                className="w-full"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Clear Cart ({getCartCount()} items)
+              </Button>
+            </div>
+          )}
         </div>
       </main>
       <Footer />

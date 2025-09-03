@@ -1,19 +1,22 @@
 import { useAuth } from '@/context/AuthContext';
+import { useCart } from '@/context/CartContext';
 import { usePaymentNotifications } from '@/hooks/usePaymentNotifications';
 
 export function PaymentNotificationManager() {
   const { user } = useAuth();
+  const { clearCart } = useCart();
 
   usePaymentNotifications({
     userId: user?.id || '',
     enableSoundNotifications: true,
     onPaymentSuccess: () => {
-      // Additional success handling if needed
-      console.log('Payment notification: Success');
+      // Additional success handling - clear cart as backup mechanism
+      console.log('PaymentNotificationManager: Payment success, clearing cart');
+      clearCart();
     },
     onPaymentFailure: () => {
       // Additional failure handling if needed
-      console.log('Payment notification: Failure');
+      console.log('PaymentNotificationManager: Payment failure');
     },
   });
 
