@@ -5,6 +5,8 @@ import { useAuth } from "@/context/AuthContext";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { ProductSkeleton } from "@/components/shop/ProductSkeleton";
 import { CategoryFilter } from "@/components/shop/CategoryFilter";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import PageLayout from "@/components/layout/PageLayout";
@@ -12,6 +14,7 @@ import PageLayout from "@/components/layout/PageLayout";
 export default function Shop() {
   const { profile } = useAuth();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>("");
   
   // Fetch products from Supabase
   const { data: products, isLoading, error } = useQuery({
@@ -31,14 +34,24 @@ export default function Shop() {
     ? [...new Set(products.filter(p => p.category).map(p => p.category!))]
     : [];
   
-  // Filter products by category
-  const filteredProducts = activeCategory 
-    ? products?.filter(product => product.category === activeCategory)
-    : products;
+  // Filter products by category and search term
+  const filteredProducts = products?.filter(product => {
+    const matchesCategory = activeCategory ? product.category === activeCategory : true;
+    const matchesSearch = searchTerm.trim() === "" ? true : 
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (product.description && product.description.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    return matchesCategory && matchesSearch;
+  });
 
   // Handle category change
   const handleCategoryChange = (category: string | null) => {
     setActiveCategory(category);
+  };
+
+  // Handle search change
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(event.target.value);
   };
 
   return (
@@ -52,6 +65,20 @@ export default function Shop() {
                 Welcome, {profile.full_name || 'Valued Customer'}!
               </p>
             )}
+          </div>
+        </div>
+        
+        {/* Search bar */}
+        <div className="mb-6">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              type="text"
+              placeholder="Search products..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              className="pl-10"
+            />
           </div>
         </div>
         
@@ -85,11 +112,11 @@ export default function Shop() {
                 </div>
               ))
             ) : (
-              // No products found for the selected category
+              // No products found for the selected filters
               <div className="col-span-full text-center py-10">
                 <p className="text-muted-foreground">
-                  {activeCategory 
-                    ? `No products found in the "${activeCategory}" category.` 
+                  {searchTerm.trim() !== "" || activeCategory 
+                    ? `No products found${activeCategory ? ` in the "${activeCategory}" category` : ""}${searchTerm.trim() !== "" ? ` matching "${searchTerm}"` : ""}.`
                     : "No products available at the moment."}
                 </p>
               </div>
