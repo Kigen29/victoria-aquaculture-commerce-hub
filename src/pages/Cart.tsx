@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -50,6 +50,11 @@ export default function Cart() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isUpdating, setIsUpdating] = useState<Record<string, boolean>>({});
+
+  // Scroll to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Handle quantity updates with debounce effect
   const handleQuantityChange = (productId: string, newQuantity: number) => {

@@ -1,10 +1,16 @@
 
 import { Link } from "react-router-dom";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Home } from "lucide-react";
 import PageLayout from "@/components/layout/PageLayout";
 
 export default function NotFound() {
+  // Scroll to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <PageLayout>
       <div className="container flex flex-col items-center justify-center py-32 text-center">

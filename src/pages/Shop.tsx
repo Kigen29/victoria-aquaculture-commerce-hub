@@ -16,6 +16,11 @@ export default function Shop() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
   
+  // Scroll to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+  
   // Fetch products from Supabase
   const { data: products, isLoading, error } = useQuery({
     queryKey: ["products"],

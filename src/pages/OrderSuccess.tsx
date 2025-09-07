@@ -30,6 +30,11 @@ export default function OrderSuccess() {
     }
   });
 
+  // Scroll to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Clear cart when payment is completed (additional safety)
   useEffect(() => {
     if (isPaymentCompleted && getCartCount() > 0) {

@@ -57,6 +57,11 @@ export default function Checkout() {
     address: '',
   });
 
+  // Scroll to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Populate form data from profile when component loads
   useEffect(() => {
     if (profile) {
