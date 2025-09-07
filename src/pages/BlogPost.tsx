@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Calendar, Share2 } from "lucide-react";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PromoSignupForm } from "@/components/contact/PromoSignupForm";
 
 interface BlogPost {
   id: string;
@@ -164,19 +163,6 @@ const BlogPost = () => {
           </div>
         </div>
       </article>
-
-      {/* Promo signup form */}
-      <div className="bg-gray-50 py-10 mt-10">
-        <div className="container max-w-md mx-auto">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-aqua-800 mb-2">Stay Updated</h2>
-            <p className="text-gray-600">
-              Sign up to receive notifications about new blog posts and promotions
-            </p>
-          </div>
-          <PromoSignupForm />
-        </div>
-      </div>
     </PageLayout>
   );
 };
