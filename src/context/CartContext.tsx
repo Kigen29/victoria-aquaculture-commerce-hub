@@ -1,5 +1,5 @@
 
-import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from "react";
 import { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,9 +54,34 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [cartItems]);
 
-  // Listen for successful payments to clear cart
+  // Enhanced cart clearing with localStorage cleanup
+  const clearCart = useCallback(() => {
+    console.log("🛒 Clearing cart - current items:", cartItems.length);
+    setCartItems([]);
+    
+    // Explicitly clear localStorage as a backup
+    try {
+      localStorage.removeItem('cart');
+      console.log("✅ Cart cleared from localStorage");
+    } catch (error) {
+      console.error("❌ Failed to clear cart from localStorage:", error);
+    }
+    
+    // Verify clearing worked
+    setTimeout(() => {
+      const remainingItems = JSON.parse(localStorage.getItem('cart') || '[]');
+      if (remainingItems.length > 0) {
+        console.warn("⚠️ Cart still has items in localStorage after clearing, forcing removal");
+        localStorage.removeItem('cart');
+      }
+    }, 100);
+  }, [cartItems.length]);
+
+  // Subscribe to payment completion events for cart clearing
   useEffect(() => {
     if (!user?.id) return;
+
+    console.log(`🔔 CartContext: Setting up payment subscription for user ${user.id}`);
 
     const channel = supabase
       .channel(`cart-updates-${user.id}`)
@@ -68,7 +93,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           table: 'pesapal_transactions'
         },
         async (payload) => {
-          console.log("CartContext: Payment transaction update received", payload.new);
+          console.log("🎉 CartContext: Payment transaction update received", payload.new);
           
           try {
             if (payload.new.status === 'COMPLETED') {
@@ -80,27 +105,32 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 .single();
 
               if (error) {
-                console.error("CartContext: Error fetching order:", error);
+                console.error("❌ CartContext: Error fetching order:", error);
                 return;
               }
                 
               if (order?.user_id === user.id) {
-                console.log("CartContext: Clearing cart for completed payment");
+                console.log("✅ CartContext: Clearing cart for completed payment");
                 clearCart();
                 toast.success("Payment completed! Cart cleared.");
+              } else {
+                console.log("ℹ️ CartContext: Payment belongs to different user, ignoring");
               }
             }
           } catch (error) {
-            console.error("CartContext: Error processing payment update:", error);
+            console.error("❌ CartContext: Error processing payment update:", error);
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log(`📡 CartContext subscription status: ${status}`);
+      });
 
     return () => {
+      console.log("🧹 CartContext: Cleaning up payment subscription");
       supabase.removeChannel(channel);
     };
-  }, [user?.id]);
+  }, [user?.id, clearCart]);
 
   // Add item to cart
   const addToCart = (product: Product, quantity = 1) => {
@@ -142,11 +172,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
           : item
       )
     );
-  };
-
-  // Clear the entire cart
-  const clearCart = () => {
-    setCartItems([]);
   };
 
   // Get total number of items in cart

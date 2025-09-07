@@ -11,7 +11,7 @@ const corsHeaders = {
 const PESAPAL_CONFIG = {
   CONSUMER_KEY: Deno.env.get('PESAPAL_CONSUMER_KEY') || '',
   CONSUMER_SECRET: Deno.env.get('PESAPAL_CONSUMER_SECRET') || '',
-  BASE_URL: 'https://cybqa.pesapal.com/pesapalv3',
+  BASE_URL: 'https://pay.pesapal.com/v3', // Use production URL for consistency
 };
 
 class PesapalService {

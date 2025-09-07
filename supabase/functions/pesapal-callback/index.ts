@@ -208,6 +208,15 @@ const handler = async (req: Request): Promise<Response> => {
       timestamp: new Date().toISOString()
     });
 
+    // Handle all notification types including IPNCHANGE
+    console.log(`📋 Processing notification type: ${orderNotificationType || 'UNKNOWN'}`);
+    
+    // IPNCHANGE is a valid notification type that indicates transaction status has changed
+    const validNotificationTypes = ['IPNCHANGE', 'PAYMENT_STATUS_UPDATE', 'ORDER_STATUS_UPDATE'];
+    if (orderNotificationType && !validNotificationTypes.includes(orderNotificationType)) {
+      console.log(`⚠️ Received notification type: ${orderNotificationType} - processing anyway`);
+    }
+
     // Log the callback for debugging
     const callbackData = {
       pesapal_tracking_id: orderTrackingId,

@@ -29,50 +29,63 @@ const PesapalPaymentFrame = ({
   const { orderStatus, isPaymentCompleted, isPaymentFailed } = useOrderTracking({
     orderId,
     enablePolling: true,
-    pollingInterval: 3000, // Check every 3 seconds
+    pollingInterval: 2000, // Check every 2 seconds for faster detection
     onPaymentSuccess: (status) => {
-      console.log('Payment successful detected via tracking:', status);
-      setPaymentCompleted(true);
-      setTimeout(() => {
-        navigate(`/order-success`, { state: { orderId } });
-      }, 2000);
+      console.log('✅ Payment successful detected via tracking:', status);
+      if (!paymentCompleted) {
+        setPaymentCompleted(true);
+        // Immediate redirect for better UX
+        setTimeout(() => {
+          navigate(`/order-success`, { state: { orderId } });
+        }, 1500);
+      }
     },
     onPaymentFailure: (status) => {
-      console.log('Payment failed detected via tracking:', status);
+      console.log('❌ Payment failed detected via tracking:', status);
       setError('Payment failed. Please try again.');
     }
   });
 
-  // Monitor URL changes in the iframe for payment completion
+  // Monitor iframe for payment completion indicators
   useEffect(() => {
-    const checkIframeUrl = () => {
+    const checkPaymentCompletion = () => {
       try {
-        if (iframeRef.current && iframeRef.current.contentWindow) {
+        if (iframeRef.current?.contentWindow) {
           const iframeLocation = iframeRef.current.contentWindow.location;
           const url = iframeLocation.href;
           
-          // Check if URL contains success parameters
-          if (url.includes('OrderTrackingId') && url.includes('OrderMerchantReference')) {
-            console.log('Payment completion detected in iframe URL:', url);
+          // Enhanced detection patterns for Pesapal success indicators
+          const successIndicators = [
+            'OrderTrackingId',
+            'payment-successful',
+            'transaction-complete',
+            'payment-receipt',
+            'success',
+            'completed'
+          ];
+          
+          const hasSuccessIndicator = successIndicators.some(indicator => 
+            url.toLowerCase().includes(indicator.toLowerCase())
+          );
+          
+          if (hasSuccessIndicator && !paymentCompleted) {
+            console.log('🎉 Payment completion detected in iframe URL:', url);
+            setPaymentCompleted(true);
             
-            // Give some time for callback to process
+            // Quick redirect with minimal delay
             setTimeout(() => {
-              if (!paymentCompleted) {
-                setPaymentCompleted(true);
-                setTimeout(() => {
-                  navigate(`/order-success`, { state: { orderId } });
-                }, 2000);
-              }
-            }, 3000);
+              navigate(`/order-success`, { state: { orderId } });
+            }, 1000);
           }
         }
       } catch (error) {
-        // Cross-origin restrictions prevent access to iframe URL
-        // This is expected and normal
+        // Cross-origin restrictions are expected - this is normal
+        console.log('Iframe URL check blocked by CORS (expected)');
       }
     };
 
-    const interval = setInterval(checkIframeUrl, 2000);
+    // Check more frequently for faster detection
+    const interval = setInterval(checkPaymentCompletion, 1500);
     return () => clearInterval(interval);
   }, [orderId, navigate, paymentCompleted]);
 
@@ -105,15 +118,27 @@ const PesapalPaymentFrame = ({
     };
   }, [orderId, navigate, onCancel]);
 
-  // Auto-redirect on successful payment detection
+  // Auto-redirect on successful payment detection from order tracking
   useEffect(() => {
     if (isPaymentCompleted && !paymentCompleted) {
+      console.log('🚀 Auto-redirecting due to payment completion');
       setPaymentCompleted(true);
       setTimeout(() => {
         navigate(`/order-success`, { state: { orderId } });
-      }, 2000);
+      }, 1000); // Faster redirect
     }
   }, [isPaymentCompleted, orderId, navigate, paymentCompleted]);
+
+  // Enhanced backup redirect mechanism
+  useEffect(() => {
+    if (orderStatus?.pesapalStatus === 'COMPLETED' && !paymentCompleted) {
+      console.log('🎯 Backup redirect triggered by order status');
+      setPaymentCompleted(true);
+      setTimeout(() => {
+        navigate(`/order-success`, { state: { orderId } });
+      }, 500);
+    }
+  }, [orderStatus, orderId, navigate, paymentCompleted]);
 
   const handleIframeLoad = () => {
     setIsLoading(false);
