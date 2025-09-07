@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Select,
@@ -19,14 +19,14 @@ export const PromoSignupForm = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const validatePhoneNumber = (phone: string): boolean => {
-    // Remove all non-digit characters except + at the beginning
-    const cleanPhone = phone.replace(/[^\d+]/g, '');
+    // Remove all spaces, dashes, parentheses for validation
+    const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
     
-    // Check for valid phone number patterns
-    // Accepts: +1234567890, 1234567890, +254123456789, 0123456789, etc.
-    const phoneRegex = /^(\+?\d{1,4})?[\d\s\-\(\)]{7,15}$/;
+    // Must start with + or digit, and contain only digits after cleaning
+    // Length should be between 8-15 digits (international standard)
+    const phoneRegex = /^(\+\d{1,4})?\d{7,14}$/;
     
-    return phoneRegex.test(phone) && cleanPhone.length >= 8 && cleanPhone.length <= 16;
+    return phoneRegex.test(cleanPhone);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,9 +53,10 @@ export const PromoSignupForm = () => {
     setIsLoading(true);
     
     try {
+      const trimmedPhone = phoneNumber.trim();
       const { error } = await supabase
         .from("contact_numbers")
-        .insert([{ phone_number: phoneNumber, opt_in_reason: optInReason }]);
+        .insert([{ phone_number: trimmedPhone, opt_in_reason: optInReason }]);
 
       if (error) {
         if (error.code === "23505") { // Unique constraint violation
