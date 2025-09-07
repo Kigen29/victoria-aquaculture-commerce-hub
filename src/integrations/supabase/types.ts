@@ -47,6 +47,60 @@ export type Database = {
         }
         Relationships: []
       }
+      campaigns: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          email_html_body: string | null
+          email_subject: string | null
+          error_message: string | null
+          failed_count: number | null
+          id: string
+          name: string
+          sent_count: number | null
+          sms_text: string | null
+          started_at: string | null
+          status: string
+          total_recipients: number | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          email_html_body?: string | null
+          email_subject?: string | null
+          error_message?: string | null
+          failed_count?: number | null
+          id?: string
+          name: string
+          sent_count?: number | null
+          sms_text?: string | null
+          started_at?: string | null
+          status?: string
+          total_recipients?: number | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          email_html_body?: string | null
+          email_subject?: string | null
+          error_message?: string | null
+          failed_count?: number | null
+          id?: string
+          name?: string
+          sent_count?: number | null
+          sms_text?: string | null
+          started_at?: string | null
+          status?: string
+          total_recipients?: number | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       contact_numbers: {
         Row: {
           created_at: string
@@ -67,6 +121,59 @@ export type Database = {
           phone_number?: string
         }
         Relationships: []
+      }
+      message_delivery_logs: {
+        Row: {
+          brevo_message_id: string | null
+          campaign_id: string
+          created_at: string
+          delivered_at: string | null
+          error_message: string | null
+          failed_at: string | null
+          id: string
+          recipient_address: string
+          recipient_type: string
+          sent_at: string | null
+          status: string
+          webhook_data: Json | null
+        }
+        Insert: {
+          brevo_message_id?: string | null
+          campaign_id: string
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          failed_at?: string | null
+          id?: string
+          recipient_address: string
+          recipient_type: string
+          sent_at?: string | null
+          status?: string
+          webhook_data?: Json | null
+        }
+        Update: {
+          brevo_message_id?: string | null
+          campaign_id?: string
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          failed_at?: string | null
+          id?: string
+          recipient_address?: string
+          recipient_type?: string
+          sent_at?: string | null
+          status?: string
+          webhook_data?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_delivery_logs_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       newsletter_subscriptions: {
         Row: {
@@ -303,14 +410,97 @@ export type Database = {
         }
         Relationships: []
       }
+      stock_movements: {
+        Row: {
+          created_at: string
+          id: string
+          movement_type: string
+          new_stock: number
+          order_id: string | null
+          previous_stock: number
+          product_id: string
+          quantity: number
+          reason: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          movement_type: string
+          new_stock: number
+          order_id?: string | null
+          previous_stock: number
+          product_id: string
+          quantity: number
+          reason?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          movement_type?: string
+          new_stock?: number
+          order_id?: string | null
+          previous_stock?: number
+          product_id?: string
+          quantity?: number
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       mask_customer_phone: {
         Args: { phone_number: string }
         Returns: string
+      }
+      reduce_product_stock: {
+        Args: { order_id_param: string }
+        Returns: boolean
       }
       user_owns_transaction: {
         Args: { transaction_order_id: string }
@@ -318,6 +508,7 @@ export type Database = {
       }
     }
     Enums: {
+      app_role: "admin" | "moderator" | "user"
       pesapal_status: "PENDING" | "COMPLETED" | "FAILED" | "CANCELLED"
     }
     CompositeTypes: {
@@ -446,6 +637,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "moderator", "user"],
       pesapal_status: ["PENDING", "COMPLETED", "FAILED", "CANCELLED"],
     },
   },

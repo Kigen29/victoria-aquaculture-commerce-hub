@@ -352,7 +352,7 @@ const handler = async (req: Request): Promise<Response> => {
       .eq('pesapal_tracking_id', orderTrackingId)
       .eq('processed', false);
 
-    // Send confirmation email if payment successful
+    // Send confirmation email and reduce stock if payment successful
     if (newStatus === 'COMPLETED') {
       console.log('📧 Sending confirmation email...');
       
@@ -372,6 +372,21 @@ const handler = async (req: Request): Promise<Response> => {
           total_amount: transaction.amount,
           confirmation_code: transactionStatus.confirmation_code || orderTrackingId
         });
+      }
+
+      // Reduce product stock
+      console.log('📦 Reducing product stock...');
+      try {
+        const { data: stockResult, error: stockError } = await supabase
+          .rpc('reduce_product_stock', { order_id_param: transaction.order_id });
+
+        if (stockError) {
+          console.error('Error reducing stock:', stockError);
+        } else {
+          console.log('✅ Stock reduction completed:', stockResult);
+        }
+      } catch (stockError) {
+        console.error('Error calling stock reduction:', stockError);
       }
     }
 

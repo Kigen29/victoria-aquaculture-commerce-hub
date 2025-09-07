@@ -143,6 +143,23 @@ const handler = async (req: Request): Promise<Response> => {
             })
             .eq('id', orderId);
 
+          // Reduce stock if payment completed
+          if (newStatus === 'COMPLETED') {
+            console.log(`📦 Reducing product stock for order ${orderId}...`);
+            try {
+              const { data: stockResult, error: stockError } = await supabase
+                .rpc('reduce_product_stock', { order_id_param: orderId });
+
+              if (stockError) {
+                console.error(`Error reducing stock for order ${orderId}:`, stockError);
+              } else {
+                console.log(`✅ Stock reduction completed for order ${orderId}:`, stockResult);
+              }
+            } catch (stockError) {
+              console.error(`Error calling stock reduction for order ${orderId}:`, stockError);
+            }
+          }
+
           results.push({
             orderId,
             oldStatus: transaction.status,
