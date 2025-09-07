@@ -6,7 +6,6 @@ import FeaturedProducts from "@/components/home/FeaturedProducts";
 import AboutSection from "@/components/home/AboutSection";
 import TestimonialSection from "@/components/home/TestimonialSection";
 import ContactSection from "@/components/home/ContactSection";
-import PromoSection from "@/components/home/PromoSection";
 
 const Index = () => {
   // Scroll to top on page load
@@ -20,7 +19,6 @@ const Index = () => {
       <FeaturedProducts />
       <AboutSection />
       <TestimonialSection />
-      <PromoSection />
       <ContactSection />
     </PageLayout>
   );
