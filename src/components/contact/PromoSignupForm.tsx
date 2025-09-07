@@ -18,13 +18,33 @@ export const PromoSignupForm = () => {
   const [optInReason, setOptInReason] = useState("sales");
   const [isLoading, setIsLoading] = useState(false);
 
+  const validatePhoneNumber = (phone: string): boolean => {
+    // Remove all non-digit characters except + at the beginning
+    const cleanPhone = phone.replace(/[^\d+]/g, '');
+    
+    // Check for valid phone number patterns
+    // Accepts: +1234567890, 1234567890, +254123456789, 0123456789, etc.
+    const phoneRegex = /^(\+?\d{1,4})?[\d\s\-\(\)]{7,15}$/;
+    
+    return phoneRegex.test(phone) && cleanPhone.length >= 8 && cleanPhone.length <= 16;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!phoneNumber.trim()) {
       toast({
+        title: "Phone number required",
+        description: "Please enter your phone number",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!validatePhoneNumber(phoneNumber.trim())) {
+      toast({
         title: "Invalid phone number",
-        description: "Please enter a valid phone number",
+        description: "Please enter a valid phone number (e.g., +254123456789 or 0123456789)",
         variant: "destructive",
       });
       return;
