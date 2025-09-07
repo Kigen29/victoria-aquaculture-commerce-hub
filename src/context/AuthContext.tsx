@@ -9,7 +9,7 @@ interface AuthContextType {
   session: Session | null;
   user: User | null;
   profile: any | null;
-  signUp: (email: string, password: string, fullName: string, phone: string, address: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName: string, phone: string, address: string) => Promise<{ success: boolean; error?: string }>;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -84,34 +84,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email,
         password,
         options: {
-          emailRedirectTo: redirectUrl
+          emailRedirectTo: redirectUrl,
+          data: {
+            full_name: fullName,
+            phone: phone,
+            address: address
+          }
         }
       });
 
       if (error) throw error;
 
-      // Get the current user to update their profile
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      
-      if (currentUser) {
-        // Profile will be created automatically via the database trigger
-        // We'll update it with the additional information
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .update({
-            full_name: fullName,
-            phone,
-            address,
-          })
-          .eq("id", currentUser.id);
-
-        if (profileError) throw profileError;
-      }
-
       toast.success("Account created successfully! Please check your email to verify your account.");
-      navigate("/shop");
+      
+      // Return a flag to indicate successful signup for redirect handling
+      return { success: true };
     } catch (error: any) {
       toast.error(error.message || "An error occurred during sign up");
+      return { success: false, error: error.message };
     } finally {
       setLoading(false);
     }

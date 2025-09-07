@@ -17,6 +17,8 @@ export default function Auth() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+  
+  const [activeTab, setActiveTab] = useState("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -80,7 +82,16 @@ export default function Auth() {
     }
     
     try {
-      await signUp(email, password, fullName, phone, address);
+      const result = await signUp(email, password, fullName, phone, address);
+      
+      if (result.success) {
+        // Clear signup form and switch to sign in tab
+        setFullName("");
+        setPhone("");
+        setAddress("");
+        setActiveTab("signin");
+        toast.info("Please check your email and click the verification link, then sign in here.");
+      }
     } catch (error: any) {
       toast.error(error.message || "Failed to sign up");
     }
@@ -101,7 +112,7 @@ export default function Auth() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="signin" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="signin">Sign In</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
