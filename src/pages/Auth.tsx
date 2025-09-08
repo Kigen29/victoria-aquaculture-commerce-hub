@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FcGoogle } from "react-icons/fc";
 import { Navigate } from "react-router-dom";
 import { toast } from "sonner";
+import { validateEmail, validatePhoneNumber, sanitizeInput } from "@/lib/security-utils";
 
 export default function Auth() {
   const { user, signIn, signUp, signInWithGoogle, loading } = useAuth();
@@ -80,9 +81,32 @@ export default function Auth() {
       toast.error("Please fill in all fields");
       return;
     }
+
+    // Validate email format
+    if (!validateEmail(email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    // Validate phone number
+    if (!validatePhoneNumber(phone)) {
+      toast.error("Please enter a valid phone number (e.g., +254 700 000 000)");
+      return;
+    }
+
+    // Check password strength
+    if (password.length < 8) {
+      toast.error("Password must be at least 8 characters long");
+      return;
+    }
+
+    // Sanitize inputs to prevent XSS
+    const sanitizedFullName = sanitizeInput(fullName);
+    const sanitizedAddress = sanitizeInput(address);
+    const sanitizedPhone = sanitizeInput(phone);
     
     try {
-      const result = await signUp(email, password, fullName, phone, address);
+      const result = await signUp(email.toLowerCase().trim(), password, sanitizedFullName, sanitizedPhone, sanitizedAddress);
       
       if (result.success) {
         // Clear signup form and switch to sign in tab
@@ -118,10 +142,17 @@ export default function Auth() {
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
             </TabsList>
             <TabsContent value="signin">
-              <form
+                <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  signIn(email, password);
+                  
+                  // Validate email format
+                  if (!validateEmail(email)) {
+                    toast.error("Please enter a valid email address");
+                    return;
+                  }
+                  
+                  signIn(email.toLowerCase().trim(), password);
                 }}
                 className="space-y-4"
               >
@@ -187,7 +218,7 @@ export default function Auth() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    minLength={6}
+                    minLength={8}
                   />
                 </div>
                 <div className="space-y-2">

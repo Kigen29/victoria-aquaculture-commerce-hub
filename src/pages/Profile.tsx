@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { User, Mail, Phone, MapPin, Edit3 } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { validateEmail, validatePhoneNumber, sanitizeInput } from "@/lib/security-utils";
+import { toast } from "sonner";
 
 type ProfileFormData = {
   full_name: string;
@@ -40,7 +42,20 @@ const Profile = () => {
   }, [profile, reset]);
 
   const onSubmit = async (data: ProfileFormData) => {
-    await updateProfile(data);
+    // Validate phone number
+    if (!validatePhoneNumber(data.phone)) {
+      toast.error("Please enter a valid phone number (e.g., +254 700 000 000)");
+      return;
+    }
+
+    // Sanitize inputs to prevent XSS
+    const sanitizedData = {
+      full_name: sanitizeInput(data.full_name),
+      phone: sanitizeInput(data.phone),
+      address: sanitizeInput(data.address)
+    };
+
+    await updateProfile(sanitizedData);
     setIsEditing(false);
   };
 
@@ -102,8 +117,11 @@ const Profile = () => {
                   <div>
                     <label className="block text-sm font-medium mb-1">Phone Number</label>
                     <Input
-                      {...register("phone", { required: "Phone number is required" })}
-                      placeholder="Enter your phone number"
+                      {...register("phone", { 
+                        required: "Phone number is required",
+                        validate: (value) => validatePhoneNumber(value) || "Please enter a valid phone number (e.g., +254 700 000 000)"
+                      })}
+                      placeholder="Enter your phone number (e.g., +254 700 000 000)"
                     />
                     {errors.phone && (
                       <p className="text-sm text-red-600 mt-1">{errors.phone.message}</p>

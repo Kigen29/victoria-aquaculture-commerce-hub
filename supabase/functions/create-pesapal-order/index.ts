@@ -120,6 +120,54 @@ class PesapalService {
   }
 }
 
+// Input validation utilities
+const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const validatePhoneNumber = (phone: string): boolean => {
+  const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+  return phoneRegex.test(phone.replace(/\s/g, ''));
+};
+
+const sanitizeInput = (input: string): string => {
+  if (!input) return '';
+  return input.trim().slice(0, 500)
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/javascript:/gi, '');
+};
+
+const validateOrderData = (orderData: any): string[] => {
+  const errors: string[] = [];
+  
+  if (!orderData.user_id) errors.push('User ID is required');
+  if (!orderData.items || !Array.isArray(orderData.items) || orderData.items.length === 0) {
+    errors.push('Items are required');
+  }
+  if (!orderData.customer_info) errors.push('Customer info is required');
+  if (!orderData.total_amount || orderData.total_amount <= 0) {
+    errors.push('Valid total amount is required');
+  }
+  
+  if (orderData.customer_info) {
+    if (!validateEmail(orderData.customer_info.email)) {
+      errors.push('Valid email is required');
+    }
+    if (!validatePhoneNumber(orderData.customer_info.phone)) {
+      errors.push('Valid phone number is required');
+    }
+    if (!orderData.customer_info.full_name || orderData.customer_info.full_name.trim().length < 2) {
+      errors.push('Valid full name is required');
+    }
+    if (!orderData.customer_info.address || orderData.customer_info.address.trim().length < 5) {
+      errors.push('Valid address is required');
+    }
+  }
+  
+  return errors;
+};
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -134,7 +182,28 @@ const handler = async (req: Request): Promise<Response> => {
     const requestData = await req.json();
     console.log('Creating Pesapal order:', requestData);
 
+    // Validate input data
+    const validationErrors = validateOrderData(requestData);
+    if (validationErrors.length > 0) {
+      console.error('Validation errors:', validationErrors);
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Validation failed: ' + validationErrors.join(', ')
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     const { user_id, items, customer_info, total_amount } = requestData;
+
+    // Sanitize customer data
+    const sanitizedCustomerInfo = {
+      email: customer_info.email.toLowerCase().trim(),
+      phone: sanitizeInput(customer_info.phone),
+      full_name: sanitizeInput(customer_info.full_name),
+      address: sanitizeInput(customer_info.address)
+    };
 
     // Create order in database first
     const orderId = crypto.randomUUID();
@@ -183,11 +252,11 @@ const handler = async (req: Request): Promise<Response> => {
       description: `Payment for Order ${orderId}`,
       callback_url: `${PESAPAL_CONFIG.REDIRECT_URL}?OrderTrackingId={OrderTrackingId}&OrderMerchantReference=${merchantReference}`,
       billing_address: {
-        email_address: customer_info.email,
-        phone_number: customer_info.phone,
-        first_name: customer_info.full_name.split(' ')[0],
-        last_name: customer_info.full_name.split(' ').slice(1).join(' ') || customer_info.full_name.split(' ')[0],
-        line_1: customer_info.address,
+        email_address: sanitizedCustomerInfo.email,
+        phone_number: sanitizedCustomerInfo.phone,
+        first_name: sanitizedCustomerInfo.full_name.split(' ')[0],
+        last_name: sanitizedCustomerInfo.full_name.split(' ').slice(1).join(' ') || sanitizedCustomerInfo.full_name.split(' ')[0],
+        line_1: sanitizedCustomerInfo.address,
         country_code: 'KE',
       },
     };
@@ -213,7 +282,7 @@ const handler = async (req: Request): Promise<Response> => {
         currency: 'KES',
         status: 'PENDING',
         iframe_url: pesapalOrder.redirect_url,
-        customer_phone: customer_info.phone,
+        customer_phone: sanitizedCustomerInfo.phone,
       })
       .select()
       .single();
