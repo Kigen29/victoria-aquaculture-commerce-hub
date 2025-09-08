@@ -27,33 +27,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    // Set up auth state listener FIRST to prevent missing events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
+        console.log('Auth state change:', event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
-
-        if (session?.user) {
-          // Use setTimeout to prevent deadlock
-          setTimeout(async () => {
-            await fetchProfile(session.user.id);
+        
+        // Safely handle profile fetching without blocking auth flow
+        if (session?.user && event === 'SIGNED_IN') {
+          setTimeout(() => {
+            fetchProfile(session.user.id);
           }, 0);
-        } else {
+        } else if (!session) {
           setProfile(null);
         }
       }
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-
-      if (session?.user) {
-        await fetchProfile(session.user.id);
+    const checkSession = async () => {
+      try {
+        const { data: { session: existingSession } } = await supabase.auth.getSession();
+        setSession(existingSession);
+        setUser(existingSession?.user ?? null);
+        
+        if (existingSession?.user) {
+          setTimeout(() => {
+            fetchProfile(existingSession.user.id);
+          }, 0);
+        }
+      } catch (error) {
+        console.error('Session check failed:', error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    };
+
+    checkSession();
 
     return () => {
       subscription.unsubscribe();
