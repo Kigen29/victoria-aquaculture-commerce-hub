@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          ip_address: unknown | null
+          record_id: string | null
+          table_name: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          record_id?: string | null
+          table_name: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          record_id?: string | null
+          table_name?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       blog_posts: {
         Row: {
           content: string
@@ -303,6 +336,7 @@ export type Database = {
           created_at: string
           currency: string
           customer_phone: string | null
+          customer_phone_display: string | null
           id: string
           iframe_url: string | null
           merchant_reference: string
@@ -316,6 +350,7 @@ export type Database = {
           created_at?: string
           currency?: string
           customer_phone?: string | null
+          customer_phone_display?: string | null
           id?: string
           iframe_url?: string | null
           merchant_reference: string
@@ -329,6 +364,7 @@ export type Database = {
           created_at?: string
           currency?: string
           customer_phone?: string | null
+          customer_phone_display?: string | null
           id?: string
           iframe_url?: string | null
           merchant_reference?: string
@@ -494,7 +530,19 @@ export type Database = {
         }
         Returns: boolean
       }
+      log_audit_access: {
+        Args: {
+          action_param: string
+          record_id_param?: string
+          table_name_param: string
+        }
+        Returns: undefined
+      }
       mask_customer_phone: {
+        Args: { phone_number: string }
+        Returns: string
+      }
+      mask_customer_phone_enhanced: {
         Args: { phone_number: string }
         Returns: string
       }
@@ -504,6 +552,14 @@ export type Database = {
       }
       user_owns_transaction: {
         Args: { transaction_order_id: string }
+        Returns: boolean
+      }
+      user_owns_transaction_with_audit: {
+        Args: { transaction_order_id: string }
+        Returns: boolean
+      }
+      validate_phone_number: {
+        Args: { phone: string }
         Returns: boolean
       }
     }
