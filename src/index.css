@@ -59,4 +59,54 @@
     background-color: #f9fafb;
     background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%230ea5e9' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
   }
+
+  /* Dynamic page content styling */
+  .dynamic-content h1 {
+    @apply text-3xl font-bold text-foreground mb-6;
+  }
+  
+  .dynamic-content h2 {
+    @apply text-2xl font-semibold text-foreground mt-8 mb-4;
+  }
+  
+  .dynamic-content h3 {
+    @apply text-xl font-semibold text-foreground mt-6 mb-3;
+  }
+  
+  .dynamic-content p {
+    @apply text-muted-foreground mb-4 leading-relaxed;
+  }
+  
+  .dynamic-content ul, 
+  .dynamic-content ol {
+    @apply text-muted-foreground mb-4 ml-6 space-y-2;
+  }
+  
+  .dynamic-content li {
+    @apply mb-2;
+  }
+  
+  .dynamic-content strong {
+    @apply font-semibold text-foreground;
+  }
+  
+  .dynamic-content em {
+    @apply italic;
+  }
+  
+  .dynamic-content section {
+    @apply mb-8;
+  }
+  
+  .dynamic-content table {
+    @apply w-full border-collapse border border-border mb-4 rounded-lg overflow-hidden;
+  }
+  
+  .dynamic-content th {
+    @apply border border-border bg-muted px-4 py-2 text-left font-semibold;
+  }
+  
+  .dynamic-content td {
+    @apply border border-border px-4 py-2 text-muted-foreground;
+  }
 }

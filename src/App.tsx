@@ -18,6 +18,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Profile from "./pages/Profile";
 import Orders from "./pages/Orders";
+import DynamicPage from "./pages/DynamicPage";
 import PrivateRoute from "./components/auth/PrivateRoute";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
@@ -44,6 +45,13 @@ const App = () => (
               <Route path="/about" element={<About />} />
               <Route path="/aboutus" element={<About />} />
               <Route path="/contact" element={<Contact />} />
+              
+              {/* Dynamic pages */}
+              <Route path="/faq" element={<DynamicPage />} />
+              <Route path="/shipping" element={<DynamicPage />} />
+              <Route path="/returns" element={<DynamicPage />} />
+              <Route path="/terms" element={<DynamicPage />} />
+              <Route path="/page/:slug" element={<DynamicPage />} />
               
               {/* Protected routes */}
               <Route element={<PrivateRoute />}>
