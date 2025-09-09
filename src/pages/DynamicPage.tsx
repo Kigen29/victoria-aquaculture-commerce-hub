@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PageLayout from "@/components/layout/PageLayout";
 import {
@@ -24,13 +24,16 @@ interface PageContent {
 }
 
 const DynamicPage = () => {
-  const { slug } = useParams<{ slug: string }>();
+  const location = useLocation();
   const [pageContent, setPageContent] = useState<PageContent | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPageContent = async () => {
+      // Extract slug from pathname (remove leading slash)
+      const slug = location.pathname.slice(1);
+      
       if (!slug) {
         setError("No page slug provided");
         setLoading(false);
@@ -43,14 +46,12 @@ const DynamicPage = () => {
           .select("*")
           .eq("slug", slug)
           .eq("published", true)
-          .single();
+          .maybeSingle();
 
         if (fetchError) {
-          if (fetchError.code === "PGRST116") {
-            setError("Page not found");
-          } else {
-            setError("Failed to load page content");
-          }
+          setError("Failed to load page content");
+        } else if (!data) {
+          setError("Page not found");
         } else {
           setPageContent(data);
           // Update page title and meta description
@@ -78,7 +79,7 @@ const DynamicPage = () => {
     
     // Scroll to top on page load
     window.scrollTo(0, 0);
-  }, [slug]);
+  }, [location.pathname]);
 
   if (loading) {
     return (
