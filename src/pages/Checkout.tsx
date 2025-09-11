@@ -7,7 +7,9 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import PageLayout from "@/components/layout/PageLayout";
-import { AddressAutocomplete } from "@/components/checkout/AddressAutocomplete";
+import { GoogleAddressAutocomplete } from "@/components/checkout/GoogleAddressAutocomplete";
+import { SimpleAddressInput } from "@/components/checkout/SimpleAddressInput";
+import { DeliveryFeeDisplay } from "@/components/checkout/DeliveryFeeDisplay";
 import PesapalPaymentFrame from "@/components/checkout/PesapalPaymentFrame";
 import { Loader2 } from "lucide-react";
 
@@ -57,6 +59,13 @@ export default function Checkout() {
     address: '',
   });
 
+  // Delivery-related states
+  const [deliveryCoordinates, setDeliveryCoordinates] = useState<{lat: number, lng: number} | null>(null);
+  const [deliveryFee, setDeliveryFee] = useState<number>(0);
+  const [deliveryZone, setDeliveryZone] = useState<string>('');
+  const [estimatedTime, setEstimatedTime] = useState<number>(30);
+  const [calculatingDelivery, setCalculatingDelivery] = useState(false);
+
   // Scroll to top on page load
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -83,6 +92,53 @@ export default function Checkout() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Calculate delivery fee when address changes
+  const calculateDeliveryFee = async (address: string, coordinates?: {lat: number, lng: number}) => {
+    if (!address.trim()) {
+      setDeliveryFee(0);
+      setDeliveryZone('');
+      setEstimatedTime(30);
+      return;
+    }
+
+    setCalculatingDelivery(true);
+
+    try {
+      const requestData = coordinates 
+        ? { address, latitude: coordinates.lat, longitude: coordinates.lng }
+        : { address };
+
+      const { data, error } = await supabase.functions.invoke('calculate-delivery-fee', {
+        body: requestData
+      });
+
+      if (error) {
+        console.error('Delivery calculation error:', error);
+        toast.error('Failed to calculate delivery fee');
+        return;
+      }
+
+      if (data.success) {
+        setDeliveryFee(data.delivery_fee);
+        setDeliveryZone(data.zone_name);
+        setEstimatedTime(data.estimated_time_mins);
+        toast.success(`Delivery fee: KES ${data.delivery_fee} (${data.zone_name})`);
+      } else {
+        toast.error(data.error || 'Failed to calculate delivery fee');
+      }
+    } catch (error) {
+      console.error('Error calculating delivery fee:', error);
+      toast.error('Error calculating delivery fee');
+    } finally {
+      setCalculatingDelivery(false);
+    }
+  };
+
+  const handleAddressSelect = (addressData: any) => {
+    setDeliveryCoordinates({ lat: addressData.lat, lng: addressData.lng });
+    calculateDeliveryFee(addressData.formatted_address, { lat: addressData.lat, lng: addressData.lng });
   };
 
   const handleCheckout = async () => {
@@ -115,7 +171,14 @@ export default function Checkout() {
           phone: formData.phone,
           address: formData.address
         },
-        total_amount: getCartTotal()
+        delivery_info: {
+          address: formData.address,
+          coordinates: deliveryCoordinates,
+          fee: deliveryFee,
+          zone: deliveryZone,
+          estimated_time: estimatedTime
+        },
+        total_amount: getCartTotal() + deliveryFee
       };
 
       console.log('Creating Pesapal order:', orderData);
@@ -232,9 +295,17 @@ export default function Checkout() {
                     <label htmlFor="address" className="block text-sm font-medium mb-1">
                       Delivery Address *
                     </label>
-                    <AddressAutocomplete
+                    {/* Use GoogleAddressAutocomplete with fallback to SimpleAddressInput */}
+                    <GoogleAddressAutocomplete
                       value={formData.address}
                       onChange={(value) => setFormData(prev => ({ ...prev, address: value }))}
+                      onAddressSelect={handleAddressSelect}
+                    />
+                    <DeliveryFeeDisplay
+                      isCalculating={calculatingDelivery}
+                      deliveryFee={deliveryFee}
+                      deliveryZone={deliveryZone}
+                      estimatedTime={estimatedTime}
                     />
                   </div>
                 </div>
@@ -272,12 +343,14 @@ export default function Checkout() {
                     <span>KES {getCartTotal().toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm mb-2">
-                    <span>Shipping</span>
-                    <span>Free</span>
+                    <span>Delivery Fee</span>
+                    <span className={deliveryFee > 0 ? "text-orange-600 font-medium" : ""}>
+                      {deliveryFee > 0 ? `KES ${deliveryFee.toFixed(2)}` : 'Calculating...'}
+                    </span>
                   </div>
                   <div className="flex justify-between font-bold text-lg mt-4">
                     <span>Total</span>
-                    <span>KES {getCartTotal().toFixed(2)}</span>
+                    <span>KES {(getCartTotal() + deliveryFee).toFixed(2)}</span>
                   </div>
                 </div>
                 

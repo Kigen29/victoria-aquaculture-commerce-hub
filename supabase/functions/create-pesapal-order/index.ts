@@ -126,6 +126,23 @@ const validateEmail = (email: string): boolean => {
   return emailRegex.test(email);
 };
 
+// Distance calculation utility (Haversine formula)
+const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const R = 6371; // Radius of the Earth in kilometers
+  const dLat = deg2rad(lat2 - lat1);
+  const dLon = deg2rad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c; // Distance in kilometers
+  return Math.round(distance * 100) / 100; // Round to 2 decimal places
+};
+
+const deg2rad = (deg: number): number => {
+  return deg * (Math.PI / 180);
+};
+
 const validatePhoneNumber = (phone: string): boolean => {
   const phoneRegex = /^\+?[1-9]\d{1,14}$/;
   return phoneRegex.test(phone.replace(/\s/g, ''));
@@ -195,7 +212,7 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    const { user_id, items, customer_info, total_amount } = requestData;
+    const { user_id, items, customer_info, delivery_info, total_amount } = requestData;
 
     // Sanitize customer data
     const sanitizedCustomerInfo = {
@@ -209,14 +226,40 @@ const handler = async (req: Request): Promise<Response> => {
     const orderId = crypto.randomUUID();
     const merchantReference = `ORDER-${orderId}`;
 
+    // Prepare order data with delivery information
+    const orderData: any = {
+      id: orderId,
+      user_id,
+      total_amount,
+      status: 'pending'
+    };
+
+    // Add delivery information if provided
+    if (delivery_info) {
+      orderData.delivery_address = delivery_info.address;
+      orderData.delivery_fee = delivery_info.fee || 0;
+      orderData.estimated_delivery_time = delivery_info.estimated_time || 30;
+      
+      if (delivery_info.coordinates) {
+        orderData.delivery_latitude = delivery_info.coordinates.lat;
+        orderData.delivery_longitude = delivery_info.coordinates.lng;
+      }
+      
+      // Calculate distance if coordinates are available
+      if (delivery_info.coordinates) {
+        const shopLat = -1.3162; // Kogo Star Plaza coordinates
+        const shopLng = 36.7965;
+        const distanceKm = calculateDistance(
+          shopLat, shopLng,
+          delivery_info.coordinates.lat, delivery_info.coordinates.lng
+        );
+        orderData.delivery_distance_km = distanceKm;
+      }
+    }
+
     const { data: order, error: orderError } = await supabase
       .from('orders')
-      .insert({
-        id: orderId,
-        user_id,
-        total_amount,
-        status: 'pending'
-      })
+      .insert(orderData)
       .select()
       .single();
 
