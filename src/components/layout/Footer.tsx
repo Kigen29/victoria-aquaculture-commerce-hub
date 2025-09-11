@@ -8,6 +8,11 @@ const Footer = () => {
       <div className="container py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
+            <img 
+              src="/lovable-uploads/Lake_Victoria_Aquaculture_Logo-removebg-preview.png" 
+              alt="Lake Victoria Aquaculture Logo" 
+              className="h-16 w-auto mb-4"
+            />
             <h3 className="text-xl font-bold mb-4">Lake Victoria Aquaculture</h3>
             <p className="text-gray-300 mb-4">
               Ocean of Quality
