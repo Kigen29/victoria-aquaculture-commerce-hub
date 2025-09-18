@@ -32,7 +32,9 @@ export const useGoogleMapsLoader = (options: GoogleMapsLoaderOptions = {}) => {
     }
 
     const script = document.createElement('script');
-    const { apiKey = 'YOUR_API_KEY_PLACEHOLDER', libraries = ['places'] } = options;
+    // Use environment variable for Google Maps API key (this should be set at build time)
+    const apiKey = options.apiKey || import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyBqKQgBVrX8FQ6hODY2bJ4w5mxRxHLb8wc'; // Fallback to a development key
+    const { libraries = ['places', 'geometry'] } = options;
     
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=${libraries.join(',')}`;
     script.async = true;

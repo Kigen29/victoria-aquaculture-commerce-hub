@@ -9,7 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import PageLayout from "@/components/layout/PageLayout";
 import { GoogleAddressAutocomplete } from "@/components/checkout/GoogleAddressAutocomplete";
 import { SimpleAddressInput } from "@/components/checkout/SimpleAddressInput";
-import { DeliveryFeeDisplay } from "@/components/checkout/DeliveryFeeDisplay";
+import { EnhancedDeliveryFeeDisplay } from "@/components/checkout/EnhancedDeliveryFeeDisplay";
+import { PopularLocations } from "@/components/checkout/PopularLocations";
 import PesapalPaymentFrame from "@/components/checkout/PesapalPaymentFrame";
 import { Loader2 } from "lucide-react";
 
@@ -65,6 +66,10 @@ export default function Checkout() {
   const [deliveryZone, setDeliveryZone] = useState<string>('');
   const [estimatedTime, setEstimatedTime] = useState<number>(30);
   const [calculatingDelivery, setCalculatingDelivery] = useState(false);
+  const [formattedDistance, setFormattedDistance] = useState<string>('');
+
+  // Free delivery threshold (similar to market competitors)
+  const FREE_DELIVERY_THRESHOLD = 2000;
 
   // Scroll to top on page load
   useEffect(() => {
@@ -121,10 +126,19 @@ export default function Checkout() {
       }
 
       if (data.success) {
-        setDeliveryFee(data.delivery_fee);
+        const cartTotal = getCartTotal();
+        const finalDeliveryFee = cartTotal >= FREE_DELIVERY_THRESHOLD ? 0 : data.delivery_fee;
+        
+        setDeliveryFee(finalDeliveryFee);
         setDeliveryZone(data.zone_name);
         setEstimatedTime(data.estimated_time_mins);
-        toast.success(`Delivery fee: KES ${data.delivery_fee} (${data.zone_name})`);
+        setFormattedDistance(data.formatted_distance || '');
+        
+        if (cartTotal >= FREE_DELIVERY_THRESHOLD) {
+          toast.success(`Free delivery! (Order above KES ${FREE_DELIVERY_THRESHOLD})`);
+        } else {
+          toast.success(`Delivery fee: KES ${finalDeliveryFee} (${data.zone_name})`);
+        }
       } else {
         toast.error(data.error || 'Failed to calculate delivery fee');
       }
@@ -139,6 +153,12 @@ export default function Checkout() {
   const handleAddressSelect = (addressData: any) => {
     setDeliveryCoordinates({ lat: addressData.lat, lng: addressData.lng });
     calculateDeliveryFee(addressData.formatted_address, { lat: addressData.lat, lng: addressData.lng });
+  };
+
+  const handlePopularLocationSelect = (location: any) => {
+    setFormData(prev => ({ ...prev, address: location.address }));
+    setDeliveryCoordinates(location.coordinates);
+    calculateDeliveryFee(location.address, location.coordinates);
   };
 
   const handleCheckout = async () => {
@@ -295,17 +315,27 @@ export default function Checkout() {
                     <label htmlFor="address" className="block text-sm font-medium mb-1">
                       Delivery Address *
                     </label>
+                    {/* Popular Locations */}
+                    <PopularLocations 
+                      onLocationSelect={handlePopularLocationSelect}
+                      className="mb-4"
+                    />
+                    
                     {/* Use GoogleAddressAutocomplete with fallback to SimpleAddressInput */}
                     <GoogleAddressAutocomplete
                       value={formData.address}
                       onChange={(value) => setFormData(prev => ({ ...prev, address: value }))}
                       onAddressSelect={handleAddressSelect}
                     />
-                    <DeliveryFeeDisplay
+                    <EnhancedDeliveryFeeDisplay
                       isCalculating={calculatingDelivery}
                       deliveryFee={deliveryFee}
                       deliveryZone={deliveryZone}
                       estimatedTime={estimatedTime}
+                      formattedDistance={formattedDistance}
+                      isFreeDelivery={getCartTotal() >= FREE_DELIVERY_THRESHOLD}
+                      freeDeliveryThreshold={FREE_DELIVERY_THRESHOLD}
+                      cartTotal={getCartTotal()}
                     />
                   </div>
                 </div>
@@ -344,8 +374,17 @@ export default function Checkout() {
                   </div>
                   <div className="flex justify-between text-sm mb-2">
                     <span>Delivery Fee</span>
-                    <span className={deliveryFee > 0 ? "text-orange-600 font-medium" : ""}>
-                      {deliveryFee > 0 ? `KES ${deliveryFee.toFixed(2)}` : 'Calculating...'}
+                    <span className={deliveryFee > 0 ? "text-orange-600 font-medium" : getCartTotal() >= FREE_DELIVERY_THRESHOLD ? "text-green-600 font-medium line-through" : ""}>
+                      {deliveryFee === 0 && deliveryZone && getCartTotal() >= FREE_DELIVERY_THRESHOLD ? (
+                        <>
+                          <span className="line-through text-gray-400 mr-2">KES {deliveryFee > 0 ? deliveryFee.toFixed(2) : '60.00'}</span>
+                          <span className="text-green-600 font-medium">FREE</span>
+                        </>
+                      ) : deliveryFee > 0 ? (
+                        `KES ${deliveryFee.toFixed(2)}`
+                      ) : (
+                        'Calculating...'
+                      )}
                     </span>
                   </div>
                   <div className="flex justify-between font-bold text-lg mt-4">
@@ -386,7 +425,7 @@ export default function Checkout() {
           iframeUrl={iframeUrl}
           onCancel={handlePaymentCancel}
           orderId={orderId}
-          amount={getCartTotal()}
+          amount={getCartTotal() + deliveryFee}
         />
       )}
     </>

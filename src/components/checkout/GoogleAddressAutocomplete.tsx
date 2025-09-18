@@ -39,7 +39,9 @@ export function GoogleAddressAutocomplete({
   const inputRef = useRef<HTMLInputElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout>();
   
-  const { isLoaded: mapsLoaded, loadError } = useGoogleMapsLoader();
+  const { isLoaded: mapsLoaded, loadError } = useGoogleMapsLoader({
+    libraries: ['places', 'geometry']
+  });
 
   // Show error if Google Maps failed to load
   useEffect(() => {
@@ -70,7 +72,7 @@ export function GoogleAddressAutocomplete({
         input: inputText,
         componentRestrictions: { country: 'ke' }, // Restrict to Kenya
         location: new window.google.maps.LatLng(-1.2921, 36.8219), // Nairobi center
-        radius: 50000, // 50km radius around Nairobi
+        radius: 30000, // 30km radius for more focused results
         types: ['establishment', 'geocode'] // Include both businesses and addresses
       }, (predictions, status) => {
         setLoading(false);
@@ -121,7 +123,7 @@ export function GoogleAddressAutocomplete({
 
       service.getDetails({
         placeId: placeId,
-        fields: ['formatted_address', 'geometry', 'address_components', 'name']
+        fields: ['formatted_address', 'geometry', 'address_components', 'name', 'vicinity', 'place_id']
       }, (place, status) => {
         setLoading(false);
 
@@ -236,7 +238,7 @@ export function GoogleAddressAutocomplete({
         <div className="relative flex-1">
           <Input
             ref={inputRef}
-            placeholder="Enter your delivery address (e.g., Westlands, Karen, CBD...)"
+            placeholder="Start typing: Westlands, Karen, CBD, Kitisuru, Kilimani..."
             value={value}
             onChange={handleInputChange}
             onFocus={() => value && suggestions.length > 0 && setShowSuggestions(true)}
