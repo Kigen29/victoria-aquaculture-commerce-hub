@@ -38,13 +38,13 @@ export function GoogleAddressAutocomplete({
   const timeoutRef = useRef<NodeJS.Timeout>();
   
   const { isLoaded: mapsLoaded, loadError } = useGoogleMapsLoader({
-    libraries: ['places', 'geometry']
+    libraries: ['places']
   });
 
-  // Show error if Google Maps failed to load
+  // Log warning if Google Maps failed to load (don't show user-facing error)
   useEffect(() => {
     if (loadError) {
-      toast.error('Failed to load Google Maps. Please refresh the page.');
+      console.warn('Address autocomplete unavailable:', loadError);
     }
   }, [loadError]);
 

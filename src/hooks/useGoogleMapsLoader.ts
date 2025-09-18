@@ -11,7 +11,7 @@ export const useGoogleMapsLoader = (options: GoogleMapsLoaderOptions = {}) => {
 
   useEffect(() => {
     // Check if already loaded
-    if (window.google && window.google.maps) {
+    if (window.google && window.google.maps && window.google.maps.places) {
       setIsLoaded(true);
       return;
     }
@@ -20,7 +20,7 @@ export const useGoogleMapsLoader = (options: GoogleMapsLoaderOptions = {}) => {
     if (document.querySelector('script[src*="maps.googleapis.com"]')) {
       // Wait for the existing script to load
       const checkLoaded = setInterval(() => {
-        if (window.google && window.google.maps) {
+        if (window.google && window.google.maps && window.google.maps.places) {
           setIsLoaded(true);
           clearInterval(checkLoaded);
         }
@@ -32,9 +32,16 @@ export const useGoogleMapsLoader = (options: GoogleMapsLoaderOptions = {}) => {
     }
 
     const script = document.createElement('script');
-    // Use environment variable for Google Maps API key (this should be set at build time)
-    const apiKey = options.apiKey || import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyBqKQgBVrX8FQ6hODY2bJ4w5mxRxHLb8wc'; // Fallback to a development key
-    const { libraries = ['places', 'geometry'] } = options;
+    // Use environment variable for Google Maps API key
+    const apiKey = options.apiKey || import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    
+    if (!apiKey) {
+      setLoadError('Google Maps API key is required for address autocomplete');
+      return;
+    }
+    
+    // Only load places library for address autocomplete
+    const { libraries = ['places'] } = options;
     
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=${libraries.join(',')}`;
     script.async = true;
