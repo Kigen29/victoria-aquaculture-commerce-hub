@@ -10,7 +10,6 @@ import PageLayout from "@/components/layout/PageLayout";
 import { GoogleAddressAutocomplete } from "@/components/checkout/GoogleAddressAutocomplete";
 import { SimpleAddressInput } from "@/components/checkout/SimpleAddressInput";
 import { EnhancedDeliveryFeeDisplay } from "@/components/checkout/EnhancedDeliveryFeeDisplay";
-import { PopularLocations } from "@/components/checkout/PopularLocations";
 import PesapalPaymentFrame from "@/components/checkout/PesapalPaymentFrame";
 import { Loader2 } from "lucide-react";
 
@@ -155,11 +154,6 @@ export default function Checkout() {
     calculateDeliveryFee(addressData.formatted_address, { lat: addressData.lat, lng: addressData.lng });
   };
 
-  const handlePopularLocationSelect = (location: any) => {
-    setFormData(prev => ({ ...prev, address: location.address }));
-    setDeliveryCoordinates(location.coordinates);
-    calculateDeliveryFee(location.address, location.coordinates);
-  };
 
   const handleCheckout = async () => {
     if (!user) {
@@ -315,13 +309,6 @@ export default function Checkout() {
                     <label htmlFor="address" className="block text-sm font-medium mb-1">
                       Delivery Address *
                     </label>
-                    {/* Popular Locations */}
-                    <PopularLocations 
-                      onLocationSelect={handlePopularLocationSelect}
-                      className="mb-4"
-                    />
-                    
-                    {/* Use GoogleAddressAutocomplete with fallback to SimpleAddressInput */}
                     <GoogleAddressAutocomplete
                       value={formData.address}
                       onChange={(value) => setFormData(prev => ({ ...prev, address: value }))}

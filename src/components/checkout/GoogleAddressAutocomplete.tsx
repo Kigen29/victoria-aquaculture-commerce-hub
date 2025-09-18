@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { MapPin, Loader2, Navigation } from "lucide-react";
+import { MapPin, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useGoogleMapsLoader } from "@/hooks/useGoogleMapsLoader";
 
@@ -35,7 +34,6 @@ export function GoogleAddressAutocomplete({
   const [suggestions, setSuggestions] = useState<PlacePrediction[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [loadingCurrentLocation, setLoadingCurrentLocation] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout>();
   
@@ -52,7 +50,7 @@ export function GoogleAddressAutocomplete({
 
   // Fetch autocomplete predictions
   const fetchPredictions = async (inputText: string) => {
-    if (!inputText.trim() || inputText.length < 3) {
+    if (!inputText.trim() || inputText.length < 2) {
       setSuggestions([]);
       setShowSuggestions(false);
       return;
@@ -72,8 +70,8 @@ export function GoogleAddressAutocomplete({
         input: inputText,
         componentRestrictions: { country: 'ke' }, // Restrict to Kenya
         location: new window.google.maps.LatLng(-1.2921, 36.8219), // Nairobi center
-        radius: 30000, // 30km radius for more focused results
-        types: ['establishment', 'geocode'] // Include both businesses and addresses
+        radius: 15000, // 15km radius for more specific results
+        types: ['address'], // Focus on specific addresses
       }, (predictions, status) => {
         setLoading(false);
         
@@ -104,7 +102,7 @@ export function GoogleAddressAutocomplete({
     // Debounce the API call
     timeoutRef.current = setTimeout(() => {
       fetchPredictions(newValue);
-    }, 300);
+    }, 200);
   };
 
   // Get place details when a suggestion is selected
@@ -123,7 +121,7 @@ export function GoogleAddressAutocomplete({
 
       service.getDetails({
         placeId: placeId,
-        fields: ['formatted_address', 'geometry', 'address_components', 'name', 'vicinity', 'place_id']
+        fields: ['formatted_address', 'geometry', 'address_components', 'name', 'vicinity', 'place_id'],
       }, (place, status) => {
         setLoading(false);
 
@@ -156,119 +154,26 @@ export function GoogleAddressAutocomplete({
     }
   };
 
-  // Get current location
-  const handleCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      toast.error('Geolocation is not supported by this browser');
-      return;
-    }
-
-    setLoadingCurrentLocation(true);
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-
-        if (!window.google || !window.google.maps) {
-          setLoadingCurrentLocation(false);
-          toast.error('Google Maps not loaded');
-          return;
-        }
-
-        try {
-          const geocoder = new window.google.maps.Geocoder();
-          
-          geocoder.geocode({
-            location: new window.google.maps.LatLng(latitude, longitude)
-          }, (results, status) => {
-            setLoadingCurrentLocation(false);
-
-            if (status === 'OK' && results && results[0]) {
-              const address = results[0].formatted_address;
-              onChange(address);
-              onCoordinatesChange?.(latitude, longitude);
-              onAddressSelect?.({
-                formatted_address: address,
-                lat: latitude,
-                lng: longitude,
-                components: results[0].address_components
-              });
-
-              toast.success('Current location detected');
-            } else {
-              toast.error('Could not get address for current location');
-            }
-          });
-        } catch (error) {
-          setLoadingCurrentLocation(false);
-          console.error('Geocoding error:', error);
-          toast.error('Failed to get address for current location');
-        }
-      },
-      (error) => {
-        setLoadingCurrentLocation(false);
-        console.error('Geolocation error:', error);
-        
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            toast.error('Location access denied. Please enable location services.');
-            break;
-          case error.POSITION_UNAVAILABLE:
-            toast.error('Location information is unavailable.');
-            break;
-          case error.TIMEOUT:
-            toast.error('Location request timed out.');
-            break;
-          default:
-            toast.error('An unknown error occurred while getting location.');
-            break;
-        }
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
-    );
-  };
 
   return (
     <div className="relative">
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Input
-            ref={inputRef}
-            placeholder="Start typing: Westlands, Karen, CBD, Kitisuru, Kilimani..."
-            value={value}
-            onChange={handleInputChange}
-            onFocus={() => value && suggestions.length > 0 && setShowSuggestions(true)}
-            className="pr-10"
-            disabled={loading}
-          />
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-            {loading ? (
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            ) : (
-              <MapPin className="h-4 w-4 text-muted-foreground" />
-            )}
-          </div>
-        </div>
-        
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={handleCurrentLocation}
-          disabled={loadingCurrentLocation}
-          className="px-3"
-          title="Use current location"
-        >
-          {loadingCurrentLocation ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+      <div className="relative">
+        <Input
+          ref={inputRef}
+          placeholder="Type your specific address: e.g., Kilimani Road, Nairobi..."
+          value={value}
+          onChange={handleInputChange}
+          onFocus={() => value && suggestions.length > 0 && setShowSuggestions(true)}
+          className="pr-10"
+          disabled={loading}
+        />
+        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           ) : (
-            <Navigation className="h-4 w-4" />
+            <MapPin className="h-4 w-4 text-muted-foreground" />
           )}
-        </Button>
+        </div>
       </div>
 
       {/* Autocomplete Suggestions */}
@@ -278,16 +183,19 @@ export function GoogleAddressAutocomplete({
             <button
               key={suggestion.place_id}
               type="button"
-              className="w-full px-4 py-3 text-left hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground transition-colors"
+              className="w-full px-4 py-3 text-left hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground transition-colors border-b border-border last:border-b-0"
               onClick={() => handleSuggestionSelect(suggestion.place_id, suggestion.description)}
             >
-              <div className="flex flex-col">
-                <span className="font-medium text-sm">
-                  {suggestion.structured_formatting.main_text}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {suggestion.structured_formatting.secondary_text}
-                </span>
+              <div className="flex items-start gap-3">
+                <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <div className="flex flex-col min-w-0 flex-1">
+                  <span className="font-medium text-sm truncate">
+                    {suggestion.structured_formatting.main_text}
+                  </span>
+                  <span className="text-xs text-muted-foreground truncate">
+                    {suggestion.structured_formatting.secondary_text}
+                  </span>
+                </div>
               </div>
             </button>
           ))}
