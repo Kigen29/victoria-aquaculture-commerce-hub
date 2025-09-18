@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { MapPin, Loader2, Navigation } from "lucide-react";
 import { toast } from "sonner";
 import { useGoogleMapsLoader } from "@/hooks/useGoogleMapsLoader";
-import "@/types/google-maps";
 
 interface GoogleAddressAutocompleteProps {
   value: string;
