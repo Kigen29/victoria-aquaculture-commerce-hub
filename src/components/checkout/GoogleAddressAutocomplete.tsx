@@ -23,6 +23,7 @@ interface PlacePrediction {
     main_text: string;
     secondary_text: string;
   };
+  types?: string[];
 }
 
 export function GoogleAddressAutocomplete({ 
@@ -36,14 +37,23 @@ export function GoogleAddressAutocomplete({
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout>();
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const sessionTokenRef = useRef<string>(crypto.randomUUID());
 
   // Fetch autocomplete predictions
   const fetchPredictions = async (inputText: string) => {
     if (!inputText.trim() || inputText.length < 2) {
       setSuggestions([]);
       setShowSuggestions(false);
+      setLoading(false);
       return;
     }
+
+    // Cancel previous request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
 
     setLoading(true);
 
@@ -51,9 +61,15 @@ export function GoogleAddressAutocomplete({
       const { data, error } = await supabase.functions.invoke('google-places-autocomplete', {
         body: { 
           action: 'autocomplete',
-          input: inputText 
+          input: inputText,
+          sessionToken: sessionTokenRef.current
         }
       });
+
+      // Check if request was aborted
+      if (abortControllerRef.current?.signal.aborted) {
+        return;
+      }
 
       setLoading(false);
 
@@ -68,6 +84,9 @@ export function GoogleAddressAutocomplete({
       setSuggestions(predictions);
       setShowSuggestions(predictions.length > 0);
     } catch (error) {
+      if (abortControllerRef.current?.signal.aborted) {
+        return;
+      }
       setLoading(false);
       console.error('Error fetching predictions:', error);
       setSuggestions([]);
@@ -85,22 +104,26 @@ export function GoogleAddressAutocomplete({
       clearTimeout(timeoutRef.current);
     }
 
-    // Debounce the API call
+    // Debounce the API call - increased to 300ms for smoother typing
     timeoutRef.current = setTimeout(() => {
       fetchPredictions(newValue);
-    }, 200);
+    }, 300);
   };
 
   // Get place details when a suggestion is selected
   const handleSuggestionSelect = async (suggestion: PlacePrediction) => {
-    setLoading(true);
     setShowSuggestions(false);
+    setLoading(true);
+
+    // Generate new session token for next search session
+    sessionTokenRef.current = crypto.randomUUID();
 
     try {
       const { data, error } = await supabase.functions.invoke('google-places-autocomplete', {
         body: { 
           action: 'details',
-          placeId: suggestion.place_id 
+          placeId: suggestion.place_id,
+          sessionToken: sessionTokenRef.current
         }
       });
 
@@ -114,9 +137,13 @@ export function GoogleAddressAutocomplete({
         return;
       }
 
-      const { address, coordinates, addressComponents } = data;
+      const { address, coordinates, addressComponents, name, types } = data;
 
-      onChange(address);
+      // Use building name if available for better specificity
+      const displayAddress = name && types?.includes('establishment') ? 
+        `${name}, ${address}` : address;
+
+      onChange(displayAddress);
       
       if (coordinates && onCoordinatesChange) {
         onCoordinatesChange(coordinates);
@@ -124,7 +151,7 @@ export function GoogleAddressAutocomplete({
 
       if (onAddressSelect) {
         onAddressSelect({
-          address,
+          address: displayAddress,
           coordinates,
           placeId: suggestion.place_id,
           addressComponents: addressComponents || []
@@ -147,12 +174,11 @@ export function GoogleAddressAutocomplete({
       <div className="relative">
         <Input
           ref={inputRef}
-          placeholder="Type your specific address: e.g., Kilimani Road, Nairobi..."
+          placeholder="Type your specific address: e.g., Building name, Street, Nairobi..."
           value={value}
           onChange={handleInputChange}
           onFocus={() => value && suggestions.length > 0 && setShowSuggestions(true)}
           className="pr-10"
-          disabled={loading}
         />
         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
           {loading ? (
@@ -182,6 +208,9 @@ export function GoogleAddressAutocomplete({
                   <span className="text-xs text-muted-foreground truncate">
                     {suggestion.structured_formatting.secondary_text}
                   </span>
+                  {suggestion.types?.includes('establishment') && (
+                    <span className="text-xs text-primary font-medium">Building</span>
+                  )}
                 </div>
               </div>
             </button>

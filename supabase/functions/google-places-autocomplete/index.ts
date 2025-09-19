@@ -13,21 +13,24 @@ interface PlacePrediction {
     main_text: string;
     secondary_text: string;
   };
+  types: string[];
 }
 
 interface PlaceDetails {
+  formatted_address: string;
   geometry: {
     location: {
       lat: number;
       lng: number;
     };
   };
-  formatted_address: string;
   address_components: Array<{
     long_name: string;
     short_name: string;
     types: string[];
   }>;
+  name?: string;
+  types: string[];
 }
 
 serve(async (req) => {
@@ -46,17 +49,38 @@ serve(async (req) => {
       );
     }
 
-    const { action, input, placeId } = await req.json();
+    const { action, input, placeId, sessionToken } = await req.json();
 
     if (action === 'autocomplete') {
-      // Get autocomplete predictions
+      if (!input || input.length < 2) {
+        return new Response(JSON.stringify({ predictions: [] }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
       console.log(`Fetching autocomplete for: "${input}"`);
+
+      // Nairobi coordinates for location bias
+      const nairobiLat = -1.2921;
+      const nairobiLng = 36.8219;
+      const radius = 50000; // 50km radius around Nairobi
+
+      // Enhanced autocomplete with specific types and location bias
+      const autocompleteUrl = new URL('https://maps.googleapis.com/maps/api/place/autocomplete/json');
+      autocompleteUrl.searchParams.set('input', input);
+      autocompleteUrl.searchParams.set('key', googleMapsApiKey);
+      autocompleteUrl.searchParams.set('components', 'country:ke');
+      autocompleteUrl.searchParams.set('location', `${nairobiLat},${nairobiLng}`);
+      autocompleteUrl.searchParams.set('radius', radius.toString());
+      autocompleteUrl.searchParams.set('strictbounds', 'true');
+      autocompleteUrl.searchParams.set('types', 'establishment|premise|subpremise_level_1|street_address');
+      if (sessionToken) {
+        autocompleteUrl.searchParams.set('sessiontoken', sessionToken);
+      }
       
-      const autocompleteUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&key=${googleMapsApiKey}&components=country:ke&types=address`;
-      
-      const response = await fetch(autocompleteUrl);
+      const response = await fetch(autocompleteUrl.toString());
       const data = await response.json();
-      
+
       if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
         console.error('Google Places API error:', data.status, data.error_message);
         return new Response(
@@ -75,11 +99,24 @@ serve(async (req) => {
 
     } else if (action === 'details') {
       // Get place details for selected prediction
+      if (!placeId) {
+        return new Response(
+          JSON.stringify({ error: 'Place ID is required for details action' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       console.log(`Fetching details for place ID: ${placeId}`);
       
-      const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${googleMapsApiKey}&fields=geometry,formatted_address,address_components`;
+      const detailsUrl = new URL('https://maps.googleapis.com/maps/api/place/details/json');
+      detailsUrl.searchParams.set('place_id', placeId);
+      detailsUrl.searchParams.set('key', googleMapsApiKey);
+      detailsUrl.searchParams.set('fields', 'geometry,formatted_address,address_components,name,types');
+      if (sessionToken) {
+        detailsUrl.searchParams.set('sessiontoken', sessionToken);
+      }
       
-      const response = await fetch(detailsUrl);
+      const response = await fetch(detailsUrl.toString());
       const data = await response.json();
       
       if (data.status !== 'OK') {
@@ -100,7 +137,9 @@ serve(async (req) => {
             lat: placeDetails.geometry.location.lat,
             lng: placeDetails.geometry.location.lng
           },
-          addressComponents: placeDetails.address_components
+          addressComponents: placeDetails.address_components,
+          name: placeDetails.name,
+          types: placeDetails.types
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
