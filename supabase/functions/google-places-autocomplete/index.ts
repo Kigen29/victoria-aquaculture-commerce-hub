@@ -73,7 +73,8 @@ serve(async (req) => {
       autocompleteUrl.searchParams.set('location', `${nairobiLat},${nairobiLng}`);
       autocompleteUrl.searchParams.set('radius', radius.toString());
       autocompleteUrl.searchParams.set('strictbounds', 'true');
-      autocompleteUrl.searchParams.set('types', 'establishment|premise|subpremise_level_1|street_address');
+      // Use valid Google Places API types - removed invalid subpremise_level_1
+      autocompleteUrl.searchParams.set('types', 'establishment|premise|subpremise|street_address|geocode');
       if (sessionToken) {
         autocompleteUrl.searchParams.set('sessiontoken', sessionToken);
       }
@@ -82,9 +83,37 @@ serve(async (req) => {
       const data = await response.json();
 
       if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-        console.error('Google Places API error:', data.status, data.error_message);
+        console.error('Google Places API error:', data.status, data.error_message || 'Unknown error');
+        
+        // Try fallback search with broader types if specific search fails
+        if (data.status === 'INVALID_REQUEST') {
+          console.log('Trying fallback search with broader types...');
+          const fallbackUrl = new URL('https://maps.googleapis.com/maps/api/place/autocomplete/json');
+          fallbackUrl.searchParams.set('input', input);
+          fallbackUrl.searchParams.set('key', googleMapsApiKey);
+          fallbackUrl.searchParams.set('components', 'country:ke');
+          fallbackUrl.searchParams.set('location', `${nairobiLat},${nairobiLng}`);
+          fallbackUrl.searchParams.set('radius', radius.toString());
+          // Broader search without specific types
+          if (sessionToken) {
+            fallbackUrl.searchParams.set('sessiontoken', sessionToken);
+          }
+          
+          const fallbackResponse = await fetch(fallbackUrl.toString());
+          const fallbackData = await fallbackResponse.json();
+          
+          if (fallbackData.status === 'OK' || fallbackData.status === 'ZERO_RESULTS') {
+            const predictions: PlacePrediction[] = fallbackData.predictions || [];
+            console.log(`Fallback search found ${predictions.length} predictions`);
+            return new Response(
+              JSON.stringify({ predictions }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+        }
+        
         return new Response(
-          JSON.stringify({ error: `Google Places API error: ${data.status}` }),
+          JSON.stringify({ error: `Google Places API error: ${data.status} - ${data.error_message || 'Unknown error'}` }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
