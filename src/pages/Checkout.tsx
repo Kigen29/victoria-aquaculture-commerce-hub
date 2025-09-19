@@ -150,8 +150,8 @@ export default function Checkout() {
   };
 
   const handleAddressSelect = (addressData: any) => {
-    setDeliveryCoordinates({ lat: addressData.lat, lng: addressData.lng });
-    calculateDeliveryFee(addressData.formatted_address, { lat: addressData.lat, lng: addressData.lng });
+    setDeliveryCoordinates({ lat: addressData.coordinates.lat, lng: addressData.coordinates.lng });
+    calculateDeliveryFee(addressData.address, { lat: addressData.coordinates.lat, lng: addressData.coordinates.lng });
   };
 
 

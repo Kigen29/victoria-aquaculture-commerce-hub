@@ -81,3 +81,6 @@ verify_jwt = true
 
 [functions.pesapal-callback]
 verify_jwt = false
+
+[functions.google-places-autocomplete]
+verify_jwt = true
