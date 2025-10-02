@@ -47,30 +47,13 @@ export function EnhancedDeliveryFeeDisplay({
       {/* Main Delivery Info */}
       <div className={`${isFreeDelivery ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'} border rounded-lg p-4 space-y-3`}>
         <div className="flex items-center justify-between">
-          <div className={`flex items-center ${isFreeDelivery ? 'text-green-700' : 'text-blue-700'}`}>
-            {isFreeDelivery ? (
-              <CheckCircle className="mr-2 h-4 w-4" />
-            ) : (
-              <Truck className="mr-2 h-4 w-4" />
-            )}
-            <span className="font-medium text-sm">
-              {isFreeDelivery ? 'Free Delivery!' : 'Delivery Available'}
-            </span>
+          <div className={`flex items-center ${isFreeDelivery ? 'text-green-600' : 'text-blue-600'}`}>
+            <Clock className="mr-1 h-4 w-4" />
+            <span className="text-sm">Estimated: {estimatedTime} mins</span>
           </div>
           <span className={`font-bold ${isFreeDelivery ? 'text-green-800 line-through' : 'text-blue-800'}`}>
             KES {deliveryFee.toFixed(2)}
           </span>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          <div className={`flex items-center ${isFreeDelivery ? 'text-green-600' : 'text-blue-600'}`}>
-            <MapPin className="mr-1 h-3 w-3" />
-            <span>{deliveryZone}</span>
-          </div>
-          <div className={`flex items-center ${isFreeDelivery ? 'text-green-600' : 'text-blue-600'}`}>
-            <Clock className="mr-1 h-3 w-3" />
-            <span>{estimatedTime} mins</span>
-          </div>
         </div>
         
         {(distance || formattedDistance) && (
