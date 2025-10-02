@@ -61,6 +61,9 @@ const App = () => (
                 <Route path="/orders" element={<Orders />} />
               </Route>
               
+              {/* Dynamic page catch-all (must be before NotFound) */}
+              <Route path="/:slug" element={<DynamicPage />} />
+              
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
