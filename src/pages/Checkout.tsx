@@ -90,6 +90,13 @@ export default function Checkout() {
     }
   }, [profile, user]);
 
+  // Auto-calculate delivery fee when address is pre-populated from profile
+  useEffect(() => {
+    if (formData.address && !deliveryZone && !calculatingDelivery) {
+      calculateDeliveryFee(formData.address);
+    }
+  }, [formData.address]);
+
   useEffect(() => {
     if (cartItems.length === 0) {
       navigate("/cart");
