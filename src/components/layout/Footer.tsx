@@ -1,8 +1,24 @@
 import { Link } from "react-router-dom";
 import { Facebook, Instagram, Twitter, Mail, Phone } from "lucide-react";
 import { NewsletterForm } from "@/components/newsletter/NewsletterForm";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const Footer = () => {
+  const { data: pages } = useQuery({
+    queryKey: ['published-pages'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('page_content')
+        .select('slug, title')
+        .eq('published', true)
+        .order('title');
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
   return (
     <footer className="bg-aqua-950 text-white">
       <div className="container py-12 md:py-16">
@@ -64,26 +80,17 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Customer Service</h3>
             <ul className="space-y-2">
-              <li>
-                <Link to="/faq" className="text-gray-300 hover:text-white">
-                  FAQ
-                </Link>
-              </li>
-              <li>
-                <Link to="/shipping" className="text-gray-300 hover:text-white">
-                  Shipping Policy
-                </Link>
-              </li>
-              <li>
-                <Link to="/returns" className="text-gray-300 hover:text-white">
-                  Returns & Refunds
-                </Link>
-              </li>
-              <li>
-                <Link to="/terms" className="text-gray-300 hover:text-white">
-                  Terms & Conditions
-                </Link>
-              </li>
+              {pages && pages.length > 0 ? (
+                pages.map((page) => (
+                  <li key={page.slug}>
+                    <Link to={`/${page.slug}`} className="text-gray-300 hover:text-white">
+                      {page.title}
+                    </Link>
+                  </li>
+                ))
+              ) : (
+                <li className="text-gray-400 text-sm">No pages available</li>
+              )}
             </ul>
           </div>
 
