@@ -87,3 +87,6 @@ verify_jwt = true
 
 [functions.submit-contact]
 verify_jwt = false
+
+[functions.detect-order-anomalies]
+verify_jwt = true

@@ -224,6 +224,24 @@ export default function Checkout() {
       console.log('Pesapal order created successfully:', data);
       toast.success("Order created! Redirecting to payment...");
 
+      // Run anomaly detection in background (non-blocking)
+      supabase.functions.invoke('detect-order-anomalies', {
+        body: {
+          userId: user?.id,
+          orderId: data.order_id,
+          totalAmount: getCartTotal() * (1 + VAT_RATE) + deliveryFee
+        }
+      }).then(({ data: anomalyData, error: anomalyError }) => {
+        if (anomalyError) {
+          console.error('Anomaly detection error:', anomalyError);
+        } else if (anomalyData?.anomalies?.length > 0) {
+          console.log('Order anomalies detected:', anomalyData.anomalies);
+          if (anomalyData.severity === 'high') {
+            toast.warning('Your order has been flagged for review. We may contact you for verification.');
+          }
+        }
+      });
+
       // Set iframe URL and show payment frame
       setIframeUrl(data.iframe_url);
       setOrderId(data.order_id);

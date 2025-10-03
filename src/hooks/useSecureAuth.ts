@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { checkRateLimit, validateEmail, validatePhoneNumber } from '@/lib/security-utils';
 import { toast } from '@/components/ui/sonner';
+import { useFailedLoginTracking } from './useFailedLoginTracking';
 
 interface SecureAuthOptions {
   requireEmailVerification?: boolean;
@@ -11,6 +12,7 @@ interface SecureAuthOptions {
 
 export function useSecureAuth(options: SecureAuthOptions = {}) {
   const { user, signIn, signOut } = useAuth();
+  const { logFailedAttempt } = useFailedLoginTracking();
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [isBlocked, setIsBlocked] = useState(false);
 
@@ -62,6 +64,14 @@ export function useSecureAuth(options: SecureAuthOptions = {}) {
 
     } catch (error: any) {
       setLoginAttempts(prev => prev + 1);
+      
+      // Log failed attempt
+      const result = await logFailedAttempt(email, error.message);
+      if (result.blocked) {
+        setIsBlocked(true);
+        toast.error('Account temporarily locked due to multiple failed login attempts');
+      }
+      
       throw error;
     }
   };
