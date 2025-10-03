@@ -84,3 +84,6 @@ verify_jwt = false
 
 [functions.google-places-autocomplete]
 verify_jwt = true
+
+[functions.submit-contact]
+verify_jwt = false

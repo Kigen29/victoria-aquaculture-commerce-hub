@@ -54,28 +54,39 @@ export const PromoSignupForm = () => {
     
     try {
       const trimmedPhone = phoneNumber.trim();
-      const { error } = await supabase
-        .from("contact_numbers")
-        .insert([{ phone_number: trimmedPhone, opt_in_reason: optInReason }]);
-
-      if (error) {
-        if (error.code === "23505") { // Unique constraint violation
-          toast({
-            title: "Already registered",
-            description: "This phone number is already registered for promotions",
-            variant: "default",
-          });
-        } else {
-          throw error;
+      
+      // Use edge function with rate limiting and security
+      const { data, error } = await supabase.functions.invoke('submit-contact', {
+        body: { 
+          phone_number: trimmedPhone, 
+          opt_in_reason: optInReason 
         }
-      } else {
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
         toast({
           title: "Thank you for signing up!",
           description: "You'll receive updates on our latest promotions and offers",
         });
         setPhoneNumber("");
+      } else if (data?.code === 'RATE_LIMIT_EXCEEDED') {
+        toast({
+          title: "Too many attempts",
+          description: data.error || "Please try again in 15 minutes",
+          variant: "destructive",
+        });
+      } else if (data?.code === 'DUPLICATE_PHONE') {
+        toast({
+          title: "Already registered",
+          description: "This phone number is already registered for promotions",
+          variant: "default",
+        });
+      } else {
+        throw new Error(data?.error || 'Unknown error');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error registering phone number:", error);
       toast({
         title: "Registration failed",
