@@ -48,19 +48,13 @@ export function EnhancedDeliveryFeeDisplay({
       <div className={`${isFreeDelivery ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'} border rounded-lg p-4 space-y-3`}>
         <div className="flex items-center justify-between">
           <div className={`flex items-center ${isFreeDelivery ? 'text-green-600' : 'text-blue-600'}`}>
-            <Clock className="mr-1 h-4 w-4" />
-            <span className="text-sm">Estimated: {estimatedTime} mins</span>
+            <Truck className="mr-1 h-4 w-4" />
+            <span className="text-sm font-medium">Delivery Fee</span>
           </div>
           <span className={`font-bold ${isFreeDelivery ? 'text-green-800 line-through' : 'text-blue-800'}`}>
             KES {deliveryFee.toFixed(2)}
           </span>
         </div>
-        
-        {(distance || formattedDistance) && (
-          <div className={`text-xs ${isFreeDelivery ? 'text-green-600' : 'text-blue-600'}`}>
-            Distance: {formattedDistance || distance}
-          </div>
-        )}
         
         <div className={`text-xs ${isFreeDelivery ? 'text-green-600 bg-green-100' : 'text-blue-600 bg-blue-100'} rounded px-2 py-1 mt-2`}>
           📍 From Kogo Star Plaza, Nairobi West
