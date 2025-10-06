@@ -25,7 +25,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
             <img 
-              src="/lovable-uploads/Lake_Victoria_Aquaculture_Logo-removebg-preview.png" 
+              src="/lovable-uploads/logo.jpg" 
               alt="Lake Victoria Aquaculture Logo" 
               className="h-16 w-auto mb-4"
             />
