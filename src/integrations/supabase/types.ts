@@ -698,23 +698,7 @@ export type Database = {
       }
     }
     Views: {
-      recent_audit_summary: {
-        Row: {
-          action: string | null
-          event_count: number | null
-          hour: string | null
-        }
-        Relationships: []
-      }
-      suspicious_activity_summary: {
-        Row: {
-          action: string | null
-          last_occurrence: string | null
-          occurrence_count: number | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       calculate_delivery_fee: {
