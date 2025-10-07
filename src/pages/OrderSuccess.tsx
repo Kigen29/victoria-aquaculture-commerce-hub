@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -10,15 +10,67 @@ import { Badge } from "@/components/ui/badge";
 import { PaymentRecovery } from "@/components/payment/PaymentRecovery";
 import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function OrderSuccess() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { orderId } = location.state || {};
   const { clearCart, getCartCount } = useCart();
+  const [effectiveOrderId, setEffectiveOrderId] = useState<string | null>(null);
+  const [isResolvingOrder, setIsResolvingOrder] = useState(false);
+
+  // Get orderId from state or resolve from query params
+  const stateOrderId = location.state?.orderId;
+  const searchParams = new URLSearchParams(location.search);
+  const trackingId = searchParams.get('OrderTrackingId');
+  const merchantRef = searchParams.get('OrderMerchantReference');
+
+  // Resolve orderId from query params if not in state
+  useEffect(() => {
+    const resolveOrderId = async () => {
+      if (stateOrderId) {
+        setEffectiveOrderId(stateOrderId);
+        return;
+      }
+
+      if (!trackingId && !merchantRef) {
+        navigate("/");
+        return;
+      }
+
+      setIsResolvingOrder(true);
+      try {
+        let query = supabase.from('pesapal_transactions').select('order_id');
+        
+        if (trackingId) {
+          query = query.eq('pesapal_tracking_id', trackingId);
+        } else if (merchantRef) {
+          query = query.eq('merchant_reference', merchantRef);
+        }
+
+        const { data, error } = await query.maybeSingle();
+
+        if (error || !data) {
+          console.error('Failed to resolve order:', error);
+          toast.error("Could not find your order");
+          navigate("/");
+          return;
+        }
+
+        setEffectiveOrderId(data.order_id);
+      } catch (error) {
+        console.error('Error resolving order:', error);
+        navigate("/");
+      } finally {
+        setIsResolvingOrder(false);
+      }
+    };
+
+    resolveOrderId();
+  }, [stateOrderId, trackingId, merchantRef, navigate]);
 
   const { orderStatus, loading, isPaymentPending, isPaymentCompleted, isPaymentFailed, refetch } = useOrderTracking({
-    orderId: orderId || '',
+    orderId: effectiveOrderId || '',
     enablePolling: true,
     onPaymentSuccess: () => {
       // Clear cart when payment succeeds as backup mechanism
@@ -43,15 +95,23 @@ export default function OrderSuccess() {
     }
   }, [isPaymentCompleted, clearCart, getCartCount]);
 
-  // Redirect if accessed directly without an order ID
-  useEffect(() => {
-    if (!orderId) {
-      navigate("/");
-    }
-  }, [orderId, navigate]);
-
-  if (!orderId) {
-    return null; // Don't render anything while redirecting
+  // Show loader while resolving order
+  if (isResolvingOrder || !effectiveOrderId) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-grow container py-12">
+          <div className="max-w-md mx-auto text-center">
+            <div className="mb-6 flex justify-center">
+              <Clock className="h-16 w-16 text-primary animate-spin" />
+            </div>
+            <h1 className="text-2xl font-bold mb-2">Loading Order...</h1>
+            <p className="text-muted-foreground">Please wait while we retrieve your order details.</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
   }
 
   const getPaymentStatusIcon = () => {
@@ -103,7 +163,7 @@ export default function OrderSuccess() {
           <div className="bg-muted/50 p-4 rounded-lg mb-6 space-y-3">
             <div>
               <p className="text-sm font-medium mb-1">Order Reference</p>
-              <p className="text-primary font-bold">{orderId}</p>
+              <p className="text-primary font-bold">{effectiveOrderId}</p>
             </div>
             
             {orderStatus?.pesapalTrackingId && (
@@ -125,7 +185,7 @@ export default function OrderSuccess() {
           {isPaymentPending && (
             <div className="mb-6">
               <PaymentRecovery 
-                orderId={orderId} 
+                orderId={effectiveOrderId} 
                 onStatusUpdated={() => refetch()}
               />
             </div>

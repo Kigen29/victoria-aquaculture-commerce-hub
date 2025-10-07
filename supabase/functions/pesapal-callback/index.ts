@@ -155,18 +155,18 @@ async function updateTransactionAndOrder(
     }
     console.log('✅ Successfully updated pesapal_transactions table');
 
-    // 2. Update orders table with proper status and ensure transaction link
-    let orderStatus = 'pending';
+    // 2. Update orders table with payment_status and ensure transaction link
+    let paymentStatus = 'pending';
     if (newStatus === 'COMPLETED') {
-      orderStatus = 'completed';
+      paymentStatus = 'completed';
     } else if (newStatus === 'FAILED' || newStatus === 'CANCELLED') {
-      orderStatus = 'failed';
+      paymentStatus = 'failed';
     }
 
     const { error: updateOrderError } = await supabase
       .from('orders')
       .update({ 
-        status: orderStatus,
+        payment_status: paymentStatus,
         pesapal_transaction_id: transactionId
       })
       .eq('id', orderId);
