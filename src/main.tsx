@@ -7,10 +7,12 @@ import { initializeSecurity } from '@/lib/security-headers'
 initializeSecurity({
   enableCSP: true,
   enableHSTS: true,
-  enableXFrameOptions: true,
+  enableXFrameOptions: false, // X-Frame-Options can't be set via meta tags
   allowedDomains: [
     'https://www.pesapal.com', // For payment processing
-    'https://pay.pesapal.com'
+    'https://pay.pesapal.com',
+    'https://storage.googleapis.com', // For file uploads
+    'https://cdn.gpteng.co' // For Lovable analytics
   ]
 });
 
