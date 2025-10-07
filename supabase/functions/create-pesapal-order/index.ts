@@ -263,7 +263,8 @@ const handler = async (req: Request): Promise<Response> => {
       id: orderId,
       user_id,
       total_amount,
-      status: 'pending'
+      payment_status: 'pending',
+      delivery_status: 'pending'
     };
 
     // Add delivery information if provided
