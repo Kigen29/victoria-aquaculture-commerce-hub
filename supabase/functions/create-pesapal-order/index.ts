@@ -326,7 +326,7 @@ const handler = async (req: Request): Promise<Response> => {
       currency: 'KES',
       amount: total_amount,
       description: `Payment for Order ${orderId}`,
-      callback_url: `${PESAPAL_CONFIG.REDIRECT_URL}?OrderTrackingId={OrderTrackingId}&OrderMerchantReference=${merchantReference}`,
+      callback_url: PESAPAL_CONFIG.REDIRECT_URL,
       billing_address: {
         email_address: sanitizedCustomerInfo.email,
         phone_number: sanitizedCustomerInfo.phone,

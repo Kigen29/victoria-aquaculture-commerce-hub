@@ -152,16 +152,42 @@ const PesapalPaymentFrame = ({
     setError('Failed to load payment page. Please try again.');
   };
 
-  // Show manual check button after 30 seconds if payment not completed
+  // Show manual check button after 10 seconds if payment not completed
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!paymentCompleted && !isPaymentCompleted) {
         setShowManualCheck(true);
       }
-    }, 30000); // 30 seconds
+    }, 10000); // 10 seconds
 
     return () => clearTimeout(timer);
   }, [paymentCompleted, isPaymentCompleted]);
+
+  // Auto-sync payment status after 12 seconds as fallback
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (!paymentCompleted && !isPaymentCompleted && !isCheckingStatus) {
+        console.log('🔄 Auto-syncing payment status after 12 seconds');
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          const { data } = await supabase.functions.invoke('sync-payment-status', {
+            body: { orderIds: [orderId] }
+          });
+          const result = data?.results?.[0];
+          if (result?.newStatus === 'COMPLETED' || result?.status === 'COMPLETED') {
+            setPaymentCompleted(true);
+            setTimeout(() => {
+              navigate(`/order-success`, { state: { orderId } });
+            }, 1000);
+          }
+        } catch (err) {
+          console.error('Auto-sync failed:', err);
+        }
+      }
+    }, 12000); // 12 seconds
+
+    return () => clearTimeout(timer);
+  }, [paymentCompleted, isPaymentCompleted, isCheckingStatus, orderId, navigate]);
 
   const handleManualStatusCheck = async () => {
     setIsCheckingStatus(true);
@@ -282,7 +308,7 @@ const PesapalPaymentFrame = ({
             onLoad={handleIframeLoad}
             onError={handleIframeError}
             title="Pesapal Payment"
-            sandbox="allow-scripts allow-same-origin allow-forms allow-top-navigation allow-popups"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-top-navigation allow-top-navigation-by-user-activation allow-popups allow-popups-to-escape-sandbox"
           />
 
           <div className="p-4 bg-gray-50 border-t">
