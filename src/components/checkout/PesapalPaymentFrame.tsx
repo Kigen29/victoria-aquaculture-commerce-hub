@@ -22,6 +22,8 @@ const PesapalPaymentFrame = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [paymentCompleted, setPaymentCompleted] = useState(false);
+  const [showManualCheck, setShowManualCheck] = useState(false);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const navigate = useNavigate();
 
@@ -150,6 +152,49 @@ const PesapalPaymentFrame = ({
     setError('Failed to load payment page. Please try again.');
   };
 
+  // Show manual check button after 30 seconds if payment not completed
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!paymentCompleted && !isPaymentCompleted) {
+        setShowManualCheck(true);
+      }
+    }, 30000); // 30 seconds
+
+    return () => clearTimeout(timer);
+  }, [paymentCompleted, isPaymentCompleted]);
+
+  const handleManualStatusCheck = async () => {
+    setIsCheckingStatus(true);
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data, error } = await supabase.functions.invoke('sync-payment-status', {
+        body: { orderIds: [orderId] }
+      });
+
+      if (error) throw error;
+
+      const result = data?.results?.[0];
+      if (result?.updated && result?.newStatus === 'COMPLETED') {
+        setPaymentCompleted(true);
+        setTimeout(() => {
+          navigate(`/order-success`, { state: { orderId } });
+        }, 1000);
+      } else if (result?.status === 'COMPLETED' || result?.newStatus === 'COMPLETED') {
+        setPaymentCompleted(true);
+        setTimeout(() => {
+          navigate(`/order-success`, { state: { orderId } });
+        }, 1000);
+      } else {
+        setError('Payment is still pending. Please complete the payment or try again.');
+      }
+    } catch (err) {
+      console.error('Error checking payment status:', err);
+      setError('Failed to check payment status. Please try again.');
+    } finally {
+      setIsCheckingStatus(false);
+    }
+  };
+
   if (paymentCompleted || isPaymentCompleted) {
     return (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -241,14 +286,33 @@ const PesapalPaymentFrame = ({
           />
 
           <div className="p-4 bg-gray-50 border-t">
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <div className="flex items-center space-x-2">
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center space-x-2 text-muted-foreground">
                 <Shield className="w-4 h-4" />
                 <span>Secured by Pesapal</span>
               </div>
-              <Button variant="ghost" size="sm" onClick={onCancel}>
-                Cancel Payment
-              </Button>
+              <div className="flex items-center space-x-2">
+                {showManualCheck && !paymentCompleted && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleManualStatusCheck}
+                    disabled={isCheckingStatus}
+                  >
+                    {isCheckingStatus ? (
+                      <>
+                        <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                        Checking...
+                      </>
+                    ) : (
+                      'Payment Complete?'
+                    )}
+                  </Button>
+                )}
+                <Button variant="ghost" size="sm" onClick={onCancel}>
+                  Cancel Payment
+                </Button>
+              </div>
             </div>
           </div>
         </CardContent>

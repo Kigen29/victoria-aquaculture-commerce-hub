@@ -186,6 +186,12 @@ async function updateTransactionAndOrder(
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  // Log every incoming request for debugging
+  console.log('🔔 Incoming request to pesapal-callback');
+  console.log('Method:', req.method);
+  console.log('URL:', req.url);
+  console.log('Headers:', Object.fromEntries(req.headers.entries()));
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
