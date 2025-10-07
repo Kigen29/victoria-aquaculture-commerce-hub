@@ -40,17 +40,13 @@ export function useOrderTracking({
       setError(null);
       
       // Fetch order with associated Pesapal transaction
-      const { data: order, error: orderError } = await supabase
+      const { data: orderRaw, error: orderError } = await supabase
         .from('orders')
-        .select(`
-          id,
-          status,
-          total_amount,
-          created_at,
-          pesapal_transaction_id
-        `)
+        .select('id, payment_status, delivery_status, total_amount, created_at, pesapal_transaction_id')
         .eq('id', orderId)
-        .single();
+        .maybeSingle();
+
+      const order = orderRaw as any;
 
       if (orderError) {
         throw new Error(`Failed to fetch order: ${orderError.message}`);
@@ -62,7 +58,7 @@ export function useOrderTracking({
 
       
       let pesapalTransaction = null;
-      if (order.pesapal_transaction_id) {
+      if (order?.pesapal_transaction_id) {
         try {
           // Use secure fetch to get transaction data with masked phone numbers
           pesapalTransaction = await fetchSecureTransactionData(order.id);
@@ -84,7 +80,7 @@ export function useOrderTracking({
       
       const status: OrderStatus = {
         orderId: order.id,
-        status: order.status as OrderStatus['status'],
+        status: (order.payment_status as OrderStatus['status']) || 'pending',
         pesapalStatus: pesapalTransaction?.status as OrderStatus['pesapalStatus'],
         pesapalTrackingId: pesapalTransaction?.pesapal_tracking_id,
         amount: pesapalTransaction?.amount || order.total_amount,
