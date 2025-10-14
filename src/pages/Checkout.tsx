@@ -69,6 +69,9 @@ export default function Checkout() {
 
   // Free delivery threshold (similar to market competitors)
   const FREE_DELIVERY_THRESHOLD = 2000;
+  
+  // VAT rate for Kenya
+  const VAT_RATE = 0.16; // 16%
 
   // Scroll to top on page load
   useEffect(() => {
@@ -199,7 +202,7 @@ export default function Checkout() {
           zone: deliveryZone,
           estimated_time: estimatedTime
         },
-        total_amount: getCartTotal() + deliveryFee
+        total_amount: getCartTotal() * (1 + VAT_RATE) + deliveryFee
       };
 
       console.log('Creating Pesapal order:', orderData);
@@ -220,24 +223,6 @@ export default function Checkout() {
 
       console.log('Pesapal order created successfully:', data);
       toast.success("Order created! Redirecting to payment...");
-
-      // Run anomaly detection in background (non-blocking)
-      supabase.functions.invoke('detect-order-anomalies', {
-        body: {
-          userId: user?.id,
-          orderId: data.order_id,
-          totalAmount: getCartTotal() + deliveryFee
-        }
-      }).then(({ data: anomalyData, error: anomalyError }) => {
-        if (anomalyError) {
-          console.error('Anomaly detection error:', anomalyError);
-        } else if (anomalyData?.anomalies?.length > 0) {
-          console.log('Order anomalies detected:', anomalyData.anomalies);
-          if (anomalyData.severity === 'high') {
-            toast.warning('Your order has been flagged for review. We may contact you for verification.');
-          }
-        }
-      });
 
       // Set iframe URL and show payment frame
       setIframeUrl(data.iframe_url);
@@ -343,8 +328,8 @@ export default function Checkout() {
                       isCalculating={calculatingDelivery}
                       deliveryFee={deliveryFee}
                       deliveryZone={deliveryZone}
-                      estimatedTime={0}
-                      formattedDistance=""
+                      estimatedTime={estimatedTime}
+                      formattedDistance={formattedDistance}
                       isFreeDelivery={getCartTotal() >= FREE_DELIVERY_THRESHOLD}
                       freeDeliveryThreshold={FREE_DELIVERY_THRESHOLD}
                       cartTotal={getCartTotal()}
@@ -385,6 +370,10 @@ export default function Checkout() {
                     <span>KES {getCartTotal().toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm mb-2">
+                    <span>VAT (16%)</span>
+                    <span>KES {(getCartTotal() * VAT_RATE).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm mb-2">
                     <span>Delivery Fee</span>
                     <span className={deliveryFee > 0 ? "text-orange-600 font-medium" : getCartTotal() >= FREE_DELIVERY_THRESHOLD ? "text-green-600 font-medium line-through" : ""}>
                       {deliveryFee === 0 && deliveryZone && getCartTotal() >= FREE_DELIVERY_THRESHOLD ? (
@@ -401,7 +390,7 @@ export default function Checkout() {
                   </div>
                   <div className="flex justify-between font-bold text-lg mt-4">
                     <span>Total</span>
-                    <span>KES {(getCartTotal() + deliveryFee).toFixed(2)}</span>
+                    <span>KES {(getCartTotal() * (1 + VAT_RATE) + deliveryFee).toFixed(2)}</span>
                   </div>
                 </div>
                 
@@ -437,7 +426,7 @@ export default function Checkout() {
           iframeUrl={iframeUrl}
           onCancel={handlePaymentCancel}
           orderId={orderId}
-          amount={getCartTotal() + deliveryFee}
+          amount={getCartTotal() * (1 + VAT_RATE) + deliveryFee}
         />
       )}
     </>

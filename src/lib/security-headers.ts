@@ -14,18 +14,25 @@ export interface SecurityConfig {
  */
 export const getCSPHeader = (config: SecurityConfig = {}) => {
   const { allowedDomains = [] } = config;
+  
+  const defaultSources = [
+    "'self'",
+    "https://mdkexfslutqzwoqfyxil.supabase.co", // Supabase
+    "https://*.supabase.co",
+    "https://accounts.google.com", // Google Auth
+    "https://www.google.com",
+    "https://www.gstatic.com",
+    ...allowedDomains
+  ];
 
   const cspDirectives = {
-    "default-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https:", "wss:"],
+    "default-src": ["'self'"],
     "script-src": [
       "'self'",
-      "'unsafe-inline'",
-      "'unsafe-eval'", // Required for React/Vite
+      "'unsafe-inline'", // Required for some React functionality
       "https://accounts.google.com",
       "https://www.google.com",
       "https://www.gstatic.com",
-      "https://cdn.gpteng.co",
-      "https://storage.googleapis.com",
       ...allowedDomains
     ],
     "style-src": [
@@ -39,7 +46,6 @@ export const getCSPHeader = (config: SecurityConfig = {}) => {
       "data:",
       "blob:",
       "https:",
-      "https://storage.googleapis.com",
       ...allowedDomains
     ],
     "font-src": [
@@ -54,8 +60,6 @@ export const getCSPHeader = (config: SecurityConfig = {}) => {
       "wss://mdkexfslutqzwoqfyxil.supabase.co",
       "wss://*.supabase.co",
       "https://accounts.google.com",
-      "https://storage.googleapis.com",
-      "https://cdn.gpteng.co",
       ...allowedDomains
     ],
     "frame-src": [
@@ -94,9 +98,12 @@ export const applySecurityHeaders = (config: SecurityConfig = {}) => {
     document.head.appendChild(cspMeta);
   }
 
-  // Note: X-Frame-Options cannot be set via meta tags
-  // It must be set as an HTTP header at the server/CDN level in production
-  // Example for Netlify/Vercel: Add to netlify.toml or vercel.json headers configuration
+  if (enableXFrameOptions) {
+    const xFrameMeta = document.createElement('meta');
+    xFrameMeta.httpEquiv = 'X-Frame-Options';
+    xFrameMeta.content = 'DENY';
+    document.head.appendChild(xFrameMeta);
+  }
 
   // Add other security-related meta tags
   const securityMetas = [

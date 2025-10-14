@@ -144,40 +144,8 @@ const deg2rad = (deg: number): number => {
 };
 
 const validatePhoneNumber = (phone: string): boolean => {
-  // Remove all spaces, dashes, and parentheses
-  const cleaned = phone.replace(/[\s\-\(\)]/g, '');
-  
-  // Accept formats:
-  // - Kenyan local: 0715089768 (10 digits starting with 0)
-  // - International with +: +254715089768
-  // - International without +: 254715089768
-  const kenyanLocalRegex = /^0[17]\d{8}$/; // Kenyan format: 07xx or 01xx
-  const internationalRegex = /^\+?[1-9]\d{1,14}$/; // International E.164 format
-  
-  return kenyanLocalRegex.test(cleaned) || internationalRegex.test(cleaned);
-};
-
-const normalizePhoneNumber = (phone: string): string => {
-  // Remove all spaces, dashes, and parentheses
-  const cleaned = phone.replace(/[\s\-\(\)]/g, '');
-  
-  // If it's a Kenyan local number (starts with 0), convert to international
-  if (/^0[17]\d{8}$/.test(cleaned)) {
-    return '+254' + cleaned.substring(1);
-  }
-  
-  // If it starts with 254 but no +, add it
-  if (/^254[17]\d{8}$/.test(cleaned)) {
-    return '+' + cleaned;
-  }
-  
-  // If it already has +, return as is
-  if (cleaned.startsWith('+')) {
-    return cleaned;
-  }
-  
-  // Otherwise, assume it's already in international format without +
-  return '+' + cleaned;
+  const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+  return phoneRegex.test(phone.replace(/\s/g, ''));
 };
 
 const sanitizeInput = (input: string): string => {
@@ -249,7 +217,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Sanitize customer data
     const sanitizedCustomerInfo = {
       email: customer_info.email.toLowerCase().trim(),
-      phone: normalizePhoneNumber(sanitizeInput(customer_info.phone)),
+      phone: sanitizeInput(customer_info.phone),
       full_name: sanitizeInput(customer_info.full_name),
       address: sanitizeInput(customer_info.address)
     };
