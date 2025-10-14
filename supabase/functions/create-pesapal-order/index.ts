@@ -13,7 +13,7 @@ const PESAPAL_CONFIG = {
   CONSUMER_SECRET: Deno.env.get('PESAPAL_CONSUMER_SECRET') || '',
   BASE_URL: 'https://pay.pesapal.com/v3', // Production URL
   IPN_URL: 'https://mdkexfslutqzwoqfyxil.supabase.co/functions/v1/pesapal-callback',
-  REDIRECT_URL: Deno.env.get('REDIRECT_URL') || 'https://lakevictoriaaquaculture.com/order-success',
+  REDIRECT_URL: 'https://victoria-aquaculture-commerce-hub.lovable.app/order-success',
 };
 
 class PesapalService {
@@ -231,10 +231,6 @@ const handler = async (req: Request): Promise<Response> => {
     const requestData = await req.json();
     console.log('Creating Pesapal order:', requestData);
 
-    // Get redirect URL from request or use default
-    const redirectUrl = requestData.redirect_url || PESAPAL_CONFIG.REDIRECT_URL;
-    console.log('Using redirect URL:', redirectUrl);
-
     // Validate input data
     const validationErrors = validateOrderData(requestData);
     if (validationErrors.length > 0) {
@@ -267,8 +263,7 @@ const handler = async (req: Request): Promise<Response> => {
       id: orderId,
       user_id,
       total_amount,
-      payment_status: 'pending',
-      delivery_status: 'pending'
+      status: 'pending'
     };
 
     // Add delivery information if provided
@@ -330,7 +325,7 @@ const handler = async (req: Request): Promise<Response> => {
       currency: 'KES',
       amount: total_amount,
       description: `Payment for Order ${orderId}`,
-      callback_url: redirectUrl,
+      callback_url: `${PESAPAL_CONFIG.REDIRECT_URL}?OrderTrackingId={OrderTrackingId}&OrderMerchantReference=${merchantReference}`,
       billing_address: {
         email_address: sanitizedCustomerInfo.email,
         phone_number: sanitizedCustomerInfo.phone,

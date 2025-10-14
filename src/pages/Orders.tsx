@@ -8,9 +8,25 @@ import { supabase } from "@/integrations/supabase/client";
 import { ShoppingBag, Calendar, DollarSign, Package } from "lucide-react";
 import { format } from "date-fns";
 
+type Order = {
+  id: string;
+  status: string;
+  total_amount: number;
+  created_at: string;
+  order_items: {
+    id: string;
+    quantity: number;
+    unit_price: number;
+    products: {
+      name: string;
+      image_url: string;
+    };
+  }[];
+};
+
 const Orders = () => {
   const { user } = useAuth();
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,14 +41,10 @@ const Orders = () => {
 
   const fetchOrders = async () => {
     try {
-      const result: any = await supabase
+      const { data, error } = await supabase
         .from("orders")
         .select(`
-          id,
-          payment_status,
-          delivery_status,
-          total_amount,
-          created_at,
+          *,
           order_items (
             id,
             quantity,
@@ -44,10 +56,9 @@ const Orders = () => {
           )
         `)
         .eq("user_id", user?.id)
-        .in("payment_status", ["completed", "failed"])
+        .in("status", ["completed", "failed", "cancelled"])
         .order("created_at", { ascending: false });
 
-      const { data, error } = result;
       if (error) throw error;
       setOrders(data || []);
     } catch (error) {
@@ -83,7 +94,7 @@ const Orders = () => {
         </div>
       </PageLayout>
     );
-  };
+  }
 
   return (
     <PageLayout>
@@ -124,24 +135,24 @@ const Orders = () => {
                           </div>
                         </div>
                       </div>
-                      <Badge className={getStatusColor(order.payment_status)}>
-                        {order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1)}
+                      <Badge className={getStatusColor(order.status)}>
+                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                       </Badge>
                     </div>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {order.order_items?.map((item: any) => (
+                      {order.order_items.map((item) => (
                         <div key={item.id} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
                           <div className="flex-shrink-0">
                             <img
-                              src={item.products?.image_url || "/placeholder.svg"}
-                              alt={item.products?.name || "Product"}
+                              src={item.products.image_url || "/placeholder.svg"}
+                              alt={item.products.name}
                               className="w-12 h-12 object-cover rounded"
                             />
                           </div>
                           <div className="flex-grow">
-                            <h4 className="font-medium">{item.products?.name}</h4>
+                            <h4 className="font-medium">{item.products.name}</h4>
                             <p className="text-sm text-gray-600">
                               Quantity: {item.quantity} × KSh {item.unit_price.toFixed(2)}
                             </p>

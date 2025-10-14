@@ -36,22 +36,21 @@ export function useOrderTracking({
   const { toast } = useToast();
 
   const fetchOrderStatus = useCallback(async () => {
-    // Guard clause: prevent running with invalid or empty orderId
-    if (!orderId || typeof orderId !== 'string' || orderId.trim() === '') {
-      setError('Invalid order ID');
-      setLoading(false);
-      return;
-    }
     try {
       setError(null);
+      
       // Fetch order with associated Pesapal transaction
-      const { data: orderRaw, error: orderError } = await supabase
+      const { data: order, error: orderError } = await supabase
         .from('orders')
-        .select('id, payment_status, delivery_status, total_amount, created_at, pesapal_transaction_id')
+        .select(`
+          id,
+          status,
+          total_amount,
+          created_at,
+          pesapal_transaction_id
+        `)
         .eq('id', orderId)
-        .maybeSingle();
-
-      const order = orderRaw as any;
+        .single();
 
       if (orderError) {
         throw new Error(`Failed to fetch order: ${orderError.message}`);
@@ -61,11 +60,13 @@ export function useOrderTracking({
         throw new Error('Order not found');
       }
 
+      
       let pesapalTransaction = null;
-      if (order?.pesapal_transaction_id) {
+      if (order.pesapal_transaction_id) {
         try {
           // Use secure fetch to get transaction data with masked phone numbers
           pesapalTransaction = await fetchSecureTransactionData(order.id);
+          
           // Log access to sensitive transaction data
           await logSensitiveDataAccess('VIEW_TRANSACTION', order.pesapal_transaction_id);
         } catch (error) {
@@ -76,13 +77,14 @@ export function useOrderTracking({
             .select('pesapal_tracking_id, status, amount, currency, updated_at')
             .eq('id', order.pesapal_transaction_id)
             .single();
+          
           pesapalTransaction = transaction;
         }
       }
-
+      
       const status: OrderStatus = {
         orderId: order.id,
-        status: (order.payment_status as OrderStatus['status']) || 'pending',
+        status: order.status as OrderStatus['status'],
         pesapalStatus: pesapalTransaction?.status as OrderStatus['pesapalStatus'],
         pesapalTrackingId: pesapalTransaction?.pesapal_tracking_id,
         amount: pesapalTransaction?.amount || order.total_amount,
@@ -113,6 +115,7 @@ export function useOrderTracking({
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(errorMessage);
       console.error('Order tracking error:', err);
+      
       toast({
         title: "Error",
         description: "Failed to update order status. Please refresh the page.",

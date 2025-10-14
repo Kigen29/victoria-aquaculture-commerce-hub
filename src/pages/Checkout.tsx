@@ -199,8 +199,7 @@ export default function Checkout() {
           zone: deliveryZone,
           estimated_time: estimatedTime
         },
-        total_amount: getCartTotal() + deliveryFee,
-        redirect_url: `${window.location.origin}/order-success`
+        total_amount: getCartTotal() + deliveryFee
       };
 
       console.log('Creating Pesapal order:', orderData);

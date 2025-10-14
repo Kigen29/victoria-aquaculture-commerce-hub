@@ -155,18 +155,18 @@ async function updateTransactionAndOrder(
     }
     console.log('✅ Successfully updated pesapal_transactions table');
 
-    // 2. Update orders table with payment_status and ensure transaction link
-    let paymentStatus = 'pending';
+    // 2. Update orders table with proper status and ensure transaction link
+    let orderStatus = 'pending';
     if (newStatus === 'COMPLETED') {
-      paymentStatus = 'completed';
+      orderStatus = 'completed';
     } else if (newStatus === 'FAILED' || newStatus === 'CANCELLED') {
-      paymentStatus = 'failed';
+      orderStatus = 'failed';
     }
 
     const { error: updateOrderError } = await supabase
       .from('orders')
       .update({ 
-        payment_status: paymentStatus,
+        status: orderStatus,
         pesapal_transaction_id: transactionId
       })
       .eq('id', orderId);
@@ -186,12 +186,6 @@ async function updateTransactionAndOrder(
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  // Log every incoming request for debugging
-  console.log('🔔 Incoming request to pesapal-callback');
-  console.log('Method:', req.method);
-  console.log('URL:', req.url);
-  console.log('Headers:', Object.fromEntries(req.headers.entries()));
-
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
