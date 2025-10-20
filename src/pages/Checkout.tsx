@@ -218,7 +218,25 @@ export default function Checkout() {
       }
 
       if (!data.success) {
-        throw new Error(data.error || 'Failed to create payment order');
+        // Enhanced error handling with user-friendly messages
+        const errorMessage = data.user_message || data.error || 'Failed to create payment order';
+        const errorCode = data.error_code || 'UNKNOWN_ERROR';
+        
+        console.error(`Payment error [${errorCode}]:`, data.error);
+        
+        // Display user-friendly error message
+        toast.error(errorMessage, { duration: 8000 });
+        
+        // Show support contact for critical errors
+        if (errorCode === 'TEST_LIMIT_EXCEEDED' || errorCode === 'PAYMENT_GATEWAY_CONFIG_ERROR') {
+          setTimeout(() => {
+            toast.info(`Need help? Contact us: ${data.support_contact || 'support@victoriaaquaculture.com'}`, { 
+              duration: 10000 
+            });
+          }, 1000);
+        }
+        
+        throw new Error(errorMessage);
       }
 
       console.log('Pesapal order created successfully:', data);
@@ -231,7 +249,11 @@ export default function Checkout() {
 
     } catch (error) {
       console.error('Checkout error:', error);
-      toast.error(error instanceof Error ? error.message : "There was an error processing your checkout. Please try again.");
+      // Error toast already shown above for data.success === false
+      // Only show generic error if it's a different type of error
+      if (error instanceof Error && !error.message.includes('payment gateway') && !error.message.includes('contact support')) {
+        toast.error(error.message || "There was an error processing your checkout. Please try again.");
+      }
     } finally {
       setPaymentProcessing(false);
     }

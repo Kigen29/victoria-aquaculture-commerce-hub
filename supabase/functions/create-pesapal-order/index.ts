@@ -364,11 +364,51 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error('Error in create-pesapal-order:', error);
     
+    // Enhanced error categorization and user-friendly messages
+    let errorMessage = error.message || 'Internal server error';
+    let errorCode = 'UNKNOWN_ERROR';
+    let statusCode = 500;
+    let userMessage = 'An unexpected error occurred. Please try again or contact support.';
+    
+    // Parse Pesapal-specific errors
+    if (errorMessage.includes('Maximum allowed test transactions limit exceeded')) {
+      errorCode = 'TEST_LIMIT_EXCEEDED';
+      statusCode = 402; // Payment Required
+      userMessage = 'The payment gateway test limit has been reached. Please contact customer support or try again later. Our team is working to resolve this issue.';
+    } else if (errorMessage.includes('Pesapal Auth Error') || errorMessage.includes('Failed to get Pesapal token')) {
+      errorCode = 'PAYMENT_GATEWAY_AUTH_ERROR';
+      statusCode = 503; // Service Unavailable
+      userMessage = 'Unable to connect to the payment gateway. Please try again in a few moments. If the issue persists, contact support.';
+    } else if (errorMessage.includes('IPN Registration Error') || errorMessage.includes('Failed to register IPN')) {
+      errorCode = 'PAYMENT_GATEWAY_CONFIG_ERROR';
+      statusCode = 503;
+      userMessage = 'Payment system configuration error. Please contact customer support.';
+    } else if (errorMessage.includes('Failed to create payment order')) {
+      errorCode = 'PAYMENT_ORDER_CREATION_FAILED';
+      statusCode = 503;
+      userMessage = 'Unable to process payment request. Please verify your details and try again. Contact support if the issue continues.';
+    } else if (errorMessage.includes('Validation failed')) {
+      errorCode = 'VALIDATION_ERROR';
+      statusCode = 400;
+      userMessage = errorMessage; // Keep the specific validation message
+    } else if (errorMessage.includes('Failed to create order') || errorMessage.includes('Failed to create order items')) {
+      errorCode = 'DATABASE_ERROR';
+      statusCode = 500;
+      userMessage = 'Unable to save order information. Please try again or contact support.';
+    } else if (errorMessage.includes('network') || errorMessage.includes('fetch failed')) {
+      errorCode = 'NETWORK_ERROR';
+      statusCode = 503;
+      userMessage = 'Network connection issue. Please check your internet connection and try again.';
+    }
+    
     return new Response(JSON.stringify({
       success: false,
-      error: error.message || 'Internal server error',
+      error: errorMessage,
+      error_code: errorCode,
+      user_message: userMessage,
+      support_contact: 'support@victoriaaquaculture.com',
     }), {
-      status: 500,
+      status: statusCode,
       headers: {
         ...corsHeaders,
         'Content-Type': 'application/json',
