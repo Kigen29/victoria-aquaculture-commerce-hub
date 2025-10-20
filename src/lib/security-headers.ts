@@ -30,6 +30,8 @@ export const getCSPHeader = (config: SecurityConfig = {}) => {
     "script-src": [
       "'self'",
       "'unsafe-inline'", // Required for some React functionality
+      "'unsafe-eval'", // Required for some build tools
+      "https://cdn.gpteng.co", // Lovable badge
       "https://accounts.google.com",
       "https://www.google.com",
       "https://www.gstatic.com",
@@ -98,12 +100,9 @@ export const applySecurityHeaders = (config: SecurityConfig = {}) => {
     document.head.appendChild(cspMeta);
   }
 
-  if (enableXFrameOptions) {
-    const xFrameMeta = document.createElement('meta');
-    xFrameMeta.httpEquiv = 'X-Frame-Options';
-    xFrameMeta.content = 'DENY';
-    document.head.appendChild(xFrameMeta);
-  }
+  // Note: X-Frame-Options cannot be set via meta tag - it must be an HTTP header
+  // This is handled at the server/CDN level (e.g., Vercel)
+  // Removed the meta tag implementation as it causes browser warnings
 
   // Add other security-related meta tags
   const securityMetas = [
