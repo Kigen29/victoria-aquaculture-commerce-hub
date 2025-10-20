@@ -212,22 +212,58 @@ export default function Checkout() {
         body: orderData
       });
 
+      // Handle errors with enhanced user-friendly messages
       if (error) {
         console.error('Edge function error:', error);
-        throw new Error(error.message || 'Failed to create payment order');
+        
+        // Try to extract custom error info from error context
+        const errorContext = (error as any).context;
+        let errorData = null;
+        
+        // Parse error body if available
+        if (errorContext?.body) {
+          try {
+            errorData = typeof errorContext.body === 'string' 
+              ? JSON.parse(errorContext.body) 
+              : errorContext.body;
+          } catch (e) {
+            console.error('Failed to parse error body:', e);
+          }
+        }
+        
+        // Display custom error message if available
+        if (errorData && errorData.user_message) {
+          const errorMessage = errorData.user_message;
+          const errorCode = errorData.error_code || 'UNKNOWN_ERROR';
+          
+          console.error(`Payment error [${errorCode}]:`, errorData.error);
+          
+          toast.error(errorMessage, { duration: 8000 });
+          
+          // Show support contact for critical errors
+          if (errorCode === 'TEST_LIMIT_EXCEEDED' || errorCode === 'PAYMENT_GATEWAY_CONFIG_ERROR') {
+            setTimeout(() => {
+              toast.info(`Need help? Contact us: ${errorData.support_contact || 'support@victoriaaquaculture.com'}`, { 
+                duration: 10000 
+              });
+            }, 1000);
+          }
+          
+          return; // Exit without throwing
+        }
+        
+        // Fallback to generic error
+        throw new Error(error.message);
       }
 
       if (!data.success) {
-        // Enhanced error handling with user-friendly messages
+        // Handle data.success === false case
         const errorMessage = data.user_message || data.error || 'Failed to create payment order';
         const errorCode = data.error_code || 'UNKNOWN_ERROR';
         
         console.error(`Payment error [${errorCode}]:`, data.error);
-        
-        // Display user-friendly error message
         toast.error(errorMessage, { duration: 8000 });
         
-        // Show support contact for critical errors
         if (errorCode === 'TEST_LIMIT_EXCEEDED' || errorCode === 'PAYMENT_GATEWAY_CONFIG_ERROR') {
           setTimeout(() => {
             toast.info(`Need help? Contact us: ${data.support_contact || 'support@victoriaaquaculture.com'}`, { 
@@ -236,7 +272,7 @@ export default function Checkout() {
           }, 1000);
         }
         
-        throw new Error(errorMessage);
+        return; // Exit without throwing
       }
 
       console.log('Pesapal order created successfully:', data);
