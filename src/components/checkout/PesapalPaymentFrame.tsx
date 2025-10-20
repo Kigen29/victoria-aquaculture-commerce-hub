@@ -74,7 +74,7 @@ const PesapalPaymentFrame = ({
             
             // Quick redirect with minimal delay
             setTimeout(() => {
-              navigate(`/order-success`, { state: { orderId } });
+              navigate(`/order-success`, { state: { orderId }, replace: true });
             }, 1000);
           }
         }
@@ -100,7 +100,7 @@ const PesapalPaymentFrame = ({
       if (event.data?.status === 'completed' || event.data?.type === 'payment_completed') {
         setPaymentCompleted(true);
         setTimeout(() => {
-          navigate(`/order-success`, { state: { orderId } });
+          navigate(`/order-success`, { state: { orderId }, replace: true });
         }, 2000);
       } else if (event.data?.status === 'failed' || event.data?.type === 'payment_failed') {
         setError('Payment failed. Please try again.');
@@ -124,7 +124,7 @@ const PesapalPaymentFrame = ({
       console.log('🚀 Auto-redirecting due to payment completion');
       setPaymentCompleted(true);
       setTimeout(() => {
-        navigate(`/order-success`, { state: { orderId } });
+        navigate(`/order-success`, { state: { orderId }, replace: true });
       }, 1000); // Faster redirect
     }
   }, [isPaymentCompleted, orderId, navigate, paymentCompleted]);
@@ -135,7 +135,7 @@ const PesapalPaymentFrame = ({
       console.log('🎯 Backup redirect triggered by order status');
       setPaymentCompleted(true);
       setTimeout(() => {
-        navigate(`/order-success`, { state: { orderId } });
+        navigate(`/order-success`, { state: { orderId }, replace: true });
       }, 500);
     }
   }, [orderStatus, orderId, navigate, paymentCompleted]);

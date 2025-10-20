@@ -14,8 +14,19 @@ import { toast } from "sonner";
 export default function OrderSuccess() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { orderId } = location.state || {};
+  const searchParams = new URLSearchParams(location.search);
   const { clearCart, getCartCount } = useCart();
+
+  // Try to get orderId from state first, then from query params
+  let orderId = location.state?.orderId;
+  
+  if (!orderId) {
+    // Extract from OrderMerchantReference query param (Pesapal redirect)
+    const merchantRef = searchParams.get('OrderMerchantReference');
+    if (merchantRef && merchantRef.startsWith('ORDER-')) {
+      orderId = merchantRef.replace('ORDER-', '');
+    }
+  }
 
   const { orderStatus, loading, isPaymentPending, isPaymentCompleted, isPaymentFailed, refetch } = useOrderTracking({
     orderId: orderId || '',

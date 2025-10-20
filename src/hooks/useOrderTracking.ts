@@ -36,6 +36,21 @@ export function useOrderTracking({
   const { toast } = useToast();
 
   const fetchOrderStatus = useCallback(async () => {
+    // Validate orderId before querying
+    if (!orderId || orderId.trim() === '') {
+      setError('Invalid order ID');
+      setLoading(false);
+      return;
+    }
+
+    // UUID validation regex
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(orderId)) {
+      setError('Invalid order ID format');
+      setLoading(false);
+      return;
+    }
+
     try {
       setError(null);
       
