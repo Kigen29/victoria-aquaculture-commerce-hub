@@ -37,13 +37,11 @@ const About = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-lake-50 p-4 rounded-lg text-center">
                   <Fish className="h-8 w-8 text-lake-600 mx-auto mb-2" />
-                  <h3 className="font-bold text-lake-700">Premium Fish</h3>
-                  <p className="text-sm text-gray-600">Fresh from Lake Victoria</p>
+                  <h3 className="font-bold text-lake-700">Premium Sea Food</h3>
                 </div>
                 <div className="bg-lake-50 p-4 rounded-lg text-center">
                   <Users className="h-8 w-8 text-lake-600 mx-auto mb-2" />
                   <h3 className="font-bold text-lake-700">Quality Poultry</h3>
-                  <p className="text-sm text-gray-600">Farm-fresh chicken products</p>
                 </div>
               </div>
             </div>

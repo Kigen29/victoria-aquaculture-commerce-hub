@@ -10,10 +10,10 @@ const AboutSection = () => {
           <div className="order-2 lg:order-1">
             <h2 className="text-3xl font-bold mb-6 text-aqua-800">About Lake Victoria Aquaculture Limited</h2>
             <p className="text-gray-600 mb-4 text-justify">
-              Lake Victoria Aquaculture Limited is dedicated to providing high-quality fish and chicken products to consumers. With a commitment to excellence and sustainability, the company partners with suppliers who align with their values to ensure only the freshest and highest quality products reach the market.
+              Lake Victoria Aquaculture Limited is dedicated to providing high-quality Sea food and Poultry products to consumers. Guided by a strong commitment to excellence and sustainability, we partner with suppliers who share our values to ensure that only the freshest and finest products reach the market.
             </p>
             <p className="text-gray-600 mb-6 text-justify">
-              Our mission is to deliver fresh, sustainable, and delicious products to your table while supporting local communities and practicing responsible farming methods that protect our environment.
+              Our mission is to deliver fresh, sustainable, and delicious products to your table while supporting local communities and promoting responsible farming practices that protect our environment for future generations.
             </p>
             <div className="grid grid-cols-2 gap-4 mb-8">
               <div className="bg-lake-50 p-4 rounded-lg text-center">
@@ -49,7 +49,6 @@ const AboutSection = () => {
             <div className="absolute -bottom-5 -left-5 w-40 h-40 bg-aqua-600 rounded-lg hidden lg:flex items-center justify-center text-white text-center p-4">
               <div>
                 <p className="font-bold">Sustainably Sourced</p>
-                <p className="text-xs mt-1">From Lake Victoria</p>
               </div>
             </div>
           </div>
