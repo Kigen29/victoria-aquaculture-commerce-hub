@@ -69,9 +69,6 @@ export default function Checkout() {
 
   // Free delivery threshold (similar to market competitors)
   const FREE_DELIVERY_THRESHOLD = 2000;
-  
-  // VAT rate for Kenya
-  const VAT_RATE = 0.16; // 16%
 
   // Scroll to top on page load
   useEffect(() => {
@@ -202,7 +199,7 @@ export default function Checkout() {
           zone: deliveryZone,
           estimated_time: estimatedTime
         },
-        total_amount: getCartTotal() * (1 + VAT_RATE) + deliveryFee
+        total_amount: getCartTotal() + deliveryFee
       };
 
       console.log('Creating Pesapal order:', orderData);
@@ -428,10 +425,6 @@ export default function Checkout() {
                     <span>KES {getCartTotal().toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm mb-2">
-                    <span>VAT (16%)</span>
-                    <span>KES {(getCartTotal() * VAT_RATE).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm mb-2">
                     <span>Delivery Fee</span>
                     <span className={deliveryFee > 0 ? "text-orange-600 font-medium" : getCartTotal() >= FREE_DELIVERY_THRESHOLD ? "text-green-600 font-medium line-through" : ""}>
                       {deliveryFee === 0 && deliveryZone && getCartTotal() >= FREE_DELIVERY_THRESHOLD ? (
@@ -448,7 +441,7 @@ export default function Checkout() {
                   </div>
                   <div className="flex justify-between font-bold text-lg mt-4">
                     <span>Total</span>
-                    <span>KES {(getCartTotal() * (1 + VAT_RATE) + deliveryFee).toFixed(2)}</span>
+                    <span>KES {(getCartTotal() + deliveryFee).toFixed(2)}</span>
                   </div>
                 </div>
                 
@@ -484,7 +477,7 @@ export default function Checkout() {
           iframeUrl={iframeUrl}
           onCancel={handlePaymentCancel}
           orderId={orderId}
-          amount={getCartTotal() * (1 + VAT_RATE) + deliveryFee}
+          amount={getCartTotal() + deliveryFee}
         />
       )}
     </>
