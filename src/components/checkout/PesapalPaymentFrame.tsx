@@ -22,6 +22,8 @@ const PesapalPaymentFrame = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [paymentCompleted, setPaymentCompleted] = useState(false);
+  const [loadTakingLong, setLoadTakingLong] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const navigate = useNavigate();
 
@@ -45,6 +47,38 @@ const PesapalPaymentFrame = ({
       setError('Payment failed. Please try again.');
     }
   });
+
+  // Detect if iframe is taking too long to load
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (isLoading) {
+        console.log('⏱️ Payment page taking longer than expected');
+        setLoadTakingLong(true);
+      }
+    }, 12000); // Show fallback options after 12 seconds
+
+    return () => clearTimeout(timer);
+  }, [isLoading]);
+
+  const handleOpenInNewTab = () => {
+    window.open(iframeUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(iframeUrl);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy link:', err);
+    }
+  };
+
+  const handleRetry = () => {
+    setLoadTakingLong(false);
+    setIsLoading(true);
+    window.location.reload();
+  };
 
   // Monitor iframe for payment completion indicators
   useEffect(() => {
@@ -203,9 +237,44 @@ const PesapalPaymentFrame = ({
         <CardContent className="p-0 relative">
           {isLoading && (
             <div className="absolute inset-0 bg-white/90 backdrop-blur-sm flex items-center justify-center z-10">
-              <div className="text-center">
+              <div className="text-center max-w-md mx-auto px-4">
                 <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-blue-600" />
-                <p className="text-sm text-muted-foreground">Loading secure payment page...</p>
+                <p className="text-sm text-muted-foreground mb-4">Loading secure payment page...</p>
+                
+                {loadTakingLong && (
+                  <Card className="mt-6 p-4 bg-white border-blue-200">
+                    <p className="text-sm font-medium mb-3">Taking longer than expected?</p>
+                    <div className="flex flex-col gap-2">
+                      <Button 
+                        onClick={handleOpenInNewTab}
+                        variant="default"
+                        size="sm"
+                        className="w-full"
+                      >
+                        Open Payment in New Tab
+                      </Button>
+                      <Button 
+                        onClick={handleCopyLink}
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                      >
+                        {copiedLink ? 'Link Copied!' : 'Copy Payment Link'}
+                      </Button>
+                      <Button 
+                        onClick={handleRetry}
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                      >
+                        Retry
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-3">
+                      You can complete payment in a new tab and return here to track your order
+                    </p>
+                  </Card>
+                )}
               </div>
             </div>
           )}
@@ -237,7 +306,7 @@ const PesapalPaymentFrame = ({
             onLoad={handleIframeLoad}
             onError={handleIframeError}
             title="Pesapal Payment"
-            sandbox="allow-scripts allow-same-origin allow-forms allow-top-navigation allow-popups"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-top-navigation allow-top-navigation-by-user-activation allow-popups"
           />
 
           <div className="p-4 bg-gray-50 border-t">

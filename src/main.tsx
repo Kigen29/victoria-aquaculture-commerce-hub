@@ -11,6 +11,7 @@ initializeSecurity({
   allowedDomains: [
     'https://www.pesapal.com', // For payment processing
     'https://pay.pesapal.com',
+    'https://*.pesapal.com', // All Pesapal subdomains
     'https://cdn.gpteng.co' // Lovable badge
   ]
 });
