@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, ShoppingBag, Home, Clock, AlertCircle, Trash2 } from "lucide-react";
+import { CheckCircle, ShoppingBag, Home, Clock, AlertCircle } from "lucide-react";
 import { useOrderTracking } from "@/hooks/useOrderTracking";
 import { Badge } from "@/components/ui/badge";
 import { PaymentRecovery } from "@/components/payment/PaymentRecovery";
@@ -162,24 +162,6 @@ export default function OrderSuccess() {
               </Link>
             </Button>
           </div>
-          
-          {/* Manual cart clear button if items still remain */}
-          {getCartCount() > 0 && (
-            <div className="mt-4">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => {
-                  clearCart();
-                  toast.success("Cart cleared manually");
-                }}
-                className="w-full"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Clear Cart ({getCartCount()} items)
-              </Button>
-            </div>
-          )}
         </div>
       </main>
       <Footer />
