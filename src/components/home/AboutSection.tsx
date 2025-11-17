@@ -1,8 +1,29 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const AboutSection = () => {
+  const { data: products, isLoading } = useQuery({
+    queryKey: ["about-section-images"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("image_url, name")
+        .not("image_url", "is", null);
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // Monthly rotation: changes every month
+  const currentMonth = new Date().getMonth(); // 0-11
+  const selectedImage = products && products.length > 0 
+    ? products[currentMonth % products.length] 
+    : null;
+
   return (
     <section className="py-16 bg-white">
       <div className="container">
@@ -40,11 +61,15 @@ const AboutSection = () => {
           
           <div className="order-1 lg:order-2 relative">
             <div className="aspect-square rounded-2xl overflow-hidden">
-              <img 
-                src="https://res.cloudinary.com/dq74qwvfm/image/upload/v1747223784/tilapia-raw_czind9.jpg" 
-                alt="Lake Victoria" 
-                className="w-full h-full object-cover"
-              />
+              {isLoading ? (
+                <Skeleton className="w-full h-full" />
+              ) : (
+                <img 
+                  src={selectedImage?.image_url || "/placeholder.svg"} 
+                  alt={selectedImage?.name || "Lake Victoria Aquaculture"} 
+                  className="w-full h-full object-cover"
+                />
+              )}
             </div>
             <div className="absolute -bottom-5 -left-5 w-40 h-40 bg-aqua-600 rounded-lg hidden lg:flex items-center justify-center text-white text-center p-4">
               <div>
