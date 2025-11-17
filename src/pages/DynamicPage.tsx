@@ -13,6 +13,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { formatDistanceToNow } from "date-fns";
 
 interface PageContent {
   id: string;
@@ -21,6 +22,7 @@ interface PageContent {
   meta_description: string;
   content: string;
   published: boolean;
+  updated_at: string;
 }
 
 const DynamicPage = () => {
@@ -151,6 +153,10 @@ const DynamicPage = () => {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
+
+        <div className="mb-4 text-sm text-muted-foreground">
+          Last updated: {formatDistanceToNow(new Date(pageContent.updated_at), { addSuffix: true })}
+        </div>
 
         <article className="prose prose-lg max-w-none">
           <div
