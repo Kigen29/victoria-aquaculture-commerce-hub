@@ -19,7 +19,7 @@ export type Database = {
           action: string
           created_at: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           record_id: string | null
           table_name: string
           user_agent: string | null
@@ -29,7 +29,7 @@ export type Database = {
           action: string
           created_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           record_id?: string | null
           table_name: string
           user_agent?: string | null
@@ -39,7 +39,7 @@ export type Database = {
           action?: string
           created_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           record_id?: string | null
           table_name?: string
           user_agent?: string | null
@@ -199,7 +199,7 @@ export type Database = {
           attempted_at: string | null
           email: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           reason: string | null
           user_agent: string | null
         }
@@ -207,7 +207,7 @@ export type Database = {
           attempted_at?: string | null
           email: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           reason?: string | null
           user_agent?: string | null
         }
@@ -215,7 +215,7 @@ export type Database = {
           attempted_at?: string | null
           email?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           reason?: string | null
           user_agent?: string | null
         }
@@ -704,10 +704,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      calculate_delivery_fee: {
-        Args: { distance_km: number }
-        Returns: Json
-      }
+      calculate_delivery_fee: { Args: { distance_km: number }; Returns: Json }
       check_failed_login_threshold: {
         Args: { ip_addr: unknown; user_email: string }
         Returns: Json
@@ -727,10 +724,7 @@ export type Database = {
         }
         Returns: undefined
       }
-      mask_customer_phone: {
-        Args: { phone_number: string }
-        Returns: string
-      }
+      mask_customer_phone: { Args: { phone_number: string }; Returns: string }
       mask_customer_phone_enhanced: {
         Args: { phone_number: string }
         Returns: string
@@ -747,10 +741,7 @@ export type Database = {
         Args: { transaction_order_id: string }
         Returns: boolean
       }
-      validate_phone_number: {
-        Args: { phone: string }
-        Returns: boolean
-      }
+      validate_phone_number: { Args: { phone: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
