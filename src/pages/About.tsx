@@ -1,10 +1,31 @@
-
 import { useEffect } from "react";
 import PageLayout from "@/components/layout/PageLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Fish, Users, Shield, Target, Award, Leaf } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const About = () => {
+  const { data: products, isLoading } = useQuery({
+    queryKey: ["about-page-images"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("image_url, name")
+        .not("image_url", "is", null);
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // Monthly rotation: changes every month
+  const currentMonth = new Date().getMonth(); // 0-11
+  const selectedImage = products && products.length > 0 
+    ? products[currentMonth % products.length] 
+    : null;
+
   // Scroll to top on page load
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -48,11 +69,15 @@ const About = () => {
             
             <div className="relative">
               <div className="aspect-square rounded-2xl overflow-hidden">
-                <img 
-                  src="https://res.cloudinary.com/dq74qwvfm/image/upload/v1747223784/tilapia-raw_czind9.jpg" 
-                  alt="Lake Victoria Aquaculture" 
-                  className="w-full h-full object-cover"
-                />
+                {isLoading ? (
+                  <Skeleton className="w-full h-full" />
+                ) : (
+                  <img 
+                    src={selectedImage?.image_url || "/placeholder.svg"} 
+                    alt={selectedImage?.name || "Lake Victoria Aquaculture"} 
+                    className="w-full h-full object-cover"
+                  />
+                )}
               </div>
             </div>
           </div>
