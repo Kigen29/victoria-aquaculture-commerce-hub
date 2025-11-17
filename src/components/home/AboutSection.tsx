@@ -50,7 +50,7 @@ const AboutSection = () => {
                 <p className="text-sm text-gray-600">Sustainable Sourcing</p>
               </div>
               <div className="bg-lake-50 p-4 rounded-lg text-center">
-                <h3 className="font-bold text-lake-700 text-2xl mb-1">24/7</h3>
+                <h3 className="font-bold text-lake-700 text-2xl mb-1">Reliable</h3>
                 <p className="text-sm text-gray-600">Customer Support</p>
               </div>
             </div>
@@ -70,11 +70,6 @@ const AboutSection = () => {
                   className="w-full h-full object-cover"
                 />
               )}
-            </div>
-            <div className="absolute -bottom-5 -left-5 w-40 h-40 bg-aqua-600 rounded-lg hidden lg:flex items-center justify-center text-white text-center p-4">
-              <div>
-                <p className="font-bold">Sustainably Sourced</p>
-              </div>
             </div>
           </div>
         </div>
