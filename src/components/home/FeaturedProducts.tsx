@@ -1,48 +1,18 @@
 
-import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ShoppingCart } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Tables } from "@/integrations/supabase/types";
 
-// Sample product data with updated fish and chicken images
-const sampleProducts = [
-  {
-    id: "1",
-    name: "Fresh Tilapia",
-    price: 1200,
-    image: "https://res.cloudinary.com/dq74qwvfm/image/upload/v1747224720/Fresh_tilapia_fish_for_cooking_food_two_raw_nile_tilapia_freshwater_fish_with_salt_on_wooden_wooden_board___Premium_Photo_y2wrih.jpg", // Fish
-    category: "fish"
-  },
-  {
-    id: "2",
-    name: "Nile Perch Fillet",
-    price: 1200,
-    image: "https://res.cloudinary.com/dq74qwvfm/image/upload/v1747223784/tilapia-raw_czind9.jpg", // Fish
-    category: "fish"
-  },
-  {
-    id: "3",
-    name: "Free Range Chicken",
-    price: 1200,
-    image: "https://res.cloudinary.com/dq74qwvfm/image/upload/v1747224720/Chicken_Bread_Rolls___Metro_peo0ub.jpg", // Chicken
-    category: "chicken"
-  },
-  {
-    id: "4",
-    name: "Organic Chicken Wings",
-    price: 1200,
-    image: "https://res.cloudinary.com/dq74qwvfm/image/upload/v1747224720/Premium_Chicken_Wings_-_1kg_aojsa7.jpg", // Chicken
-    category: "chicken"
-  }
-];
-
-const ProductCard = ({ product }: { product: any }) => {
+const ProductCard = ({ product }: { product: Tables<"products"> }) => {
   return (
     <div className="glass-card card-hover overflow-hidden flex flex-col h-full">
       <div className="relative h-60 w-full overflow-hidden">
         <img 
-          src={product.image} 
+          src={product.image_url || "/placeholder.svg"} 
           alt={product.name} 
           className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
         />
@@ -75,18 +45,19 @@ const ProductSkeleton = () => {
 };
 
 const FeaturedProducts = () => {
-  const [loading, setLoading] = useState(true);
-  const [products, setProducts] = useState<any[]>([]);
-
-  // Simulate loading products
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setProducts(sampleProducts);
-      setLoading(false);
-    }, 1500);
-
-    return () => clearTimeout(timer);
-  }, []);
+  const { data: products, isLoading } = useQuery({
+    queryKey: ["featured-products"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(4);
+      
+      if (error) throw error;
+      return data as Tables<"products">[];
+    }
+  });
 
   return (
     <section className="py-16 bg-gradient-to-b from-white to-lake-50">
@@ -99,11 +70,11 @@ const FeaturedProducts = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {loading ? 
+          {isLoading ? 
             Array(4).fill(0).map((_, index) => (
               <ProductSkeleton key={index} />
             )) : 
-            products.map(product => (
+            products?.map(product => (
               <ProductCard key={product.id} product={product} />
             ))
           }
