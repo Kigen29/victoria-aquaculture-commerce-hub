@@ -24,11 +24,11 @@ export const BlogCard = ({ slug, title, content, featuredImage, createdAt }: Blo
   return (
     <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
       {featuredImage && (
-        <div className="aspect-video w-full overflow-hidden">
+        <div className="aspect-video w-full overflow-hidden bg-muted">
           <img 
             src={featuredImage} 
             alt={title} 
-            className="w-full h-full object-cover transition-transform hover:scale-105 duration-300"
+            className="w-full h-full object-contain transition-transform hover:scale-105 duration-300"
           />
         </div>
       )}
