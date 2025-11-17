@@ -154,10 +154,6 @@ const DynamicPage = () => {
           </BreadcrumbList>
         </Breadcrumb>
 
-        <div className="mb-4 text-sm text-muted-foreground">
-          Last updated: {formatDistanceToNow(new Date(pageContent.updated_at), { addSuffix: true })}
-        </div>
-
         <article className="prose prose-lg max-w-none">
           <div
             dangerouslySetInnerHTML={{
