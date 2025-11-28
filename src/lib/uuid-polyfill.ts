@@ -3,9 +3,14 @@
  * crypto.randomUUID() is not supported on iOS Safari < 15.4
  */
 export function generateUUID(): string {
-  // Use native crypto.randomUUID if available (modern browsers)
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
+  // Try native crypto.randomUUID first with full error handling
+  try {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+  } catch (e) {
+    // iOS Safari may throw "Operation is insecure" even when just accessing crypto properties
+    console.warn('crypto.randomUUID not available, using fallback');
   }
   
   // Fallback for older browsers (iOS Safari < 15.4, etc.)

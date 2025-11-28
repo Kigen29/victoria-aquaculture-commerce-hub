@@ -69,10 +69,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     
     // Verify clearing worked
     setTimeout(() => {
-      const remainingItems = JSON.parse(localStorage.getItem('cart') || '[]');
-      if (remainingItems.length > 0) {
-        console.warn("⚠️ Cart still has items in localStorage after clearing, forcing removal");
-        localStorage.removeItem('cart');
+      try {
+        const remainingItems = JSON.parse(localStorage.getItem('cart') || '[]');
+        if (remainingItems.length > 0) {
+          console.warn("⚠️ Cart still has items in localStorage after clearing, forcing removal");
+          localStorage.removeItem('cart');
+        }
+      } catch (error) {
+        console.warn("Could not verify cart clearing (localStorage may be unavailable):", error);
       }
     }, 100);
   }, [cartItems.length]);
