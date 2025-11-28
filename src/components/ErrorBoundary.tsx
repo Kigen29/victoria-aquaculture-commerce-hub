@@ -22,7 +22,15 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Uncaught error:', error, errorInfo);
+    // Enhanced error logging for better debugging, especially on iOS
+    console.error('=== Error Boundary Caught Error ===');
+    console.error('Error:', error);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('Component stack:', errorInfo.componentStack);
+    console.error('User agent:', navigator.userAgent);
+    console.error('Platform:', navigator.platform);
+    console.error('===================================');
   }
 
   public render() {

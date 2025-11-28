@@ -84,44 +84,49 @@ export const getCSPHeader = (config: SecurityConfig = {}) => {
  * Apply security headers to document head
  */
 export const applySecurityHeaders = (config: SecurityConfig = {}) => {
-  const {
-    enableCSP = true,
-    enableHSTS = true,
-    enableXFrameOptions = true
-  } = config;
+  try {
+    const {
+      enableCSP = true,
+      enableHSTS = true,
+      enableXFrameOptions = true
+    } = config;
 
-  // Note: These meta tags provide limited security compared to actual HTTP headers
-  // In production, these should be set at the server/CDN level
-  
-  if (enableCSP) {
-    const cspMeta = document.createElement('meta');
-    cspMeta.httpEquiv = 'Content-Security-Policy';
-    cspMeta.content = getCSPHeader(config);
-    document.head.appendChild(cspMeta);
-  }
-
-  // Note: X-Frame-Options cannot be set via meta tag - it must be an HTTP header
-  // This is handled at the server/CDN level (e.g., Vercel)
-  // Removed the meta tag implementation as it causes browser warnings
-
-  // Add other security-related meta tags
-  const securityMetas = [
-    { httpEquiv: 'X-Content-Type-Options', content: 'nosniff' },
-    { httpEquiv: 'X-XSS-Protection', content: '1; mode=block' },
-    { httpEquiv: 'Referrer-Policy', content: 'strict-origin-when-cross-origin' },
-    { name: 'robots', content: 'noindex, nofollow' } // Adjust based on needs
-  ];
-
-  securityMetas.forEach(meta => {
-    const metaEl = document.createElement('meta');
-    if ('httpEquiv' in meta) {
-      metaEl.httpEquiv = meta.httpEquiv;
-    } else if ('name' in meta) {
-      metaEl.name = meta.name;
+    // Note: These meta tags provide limited security compared to actual HTTP headers
+    // In production, these should be set at the server/CDN level
+    
+    if (enableCSP) {
+      const cspMeta = document.createElement('meta');
+      cspMeta.httpEquiv = 'Content-Security-Policy';
+      cspMeta.content = getCSPHeader(config);
+      document.head.appendChild(cspMeta);
     }
-    metaEl.content = meta.content;
-    document.head.appendChild(metaEl);
-  });
+
+    // Note: X-Frame-Options cannot be set via meta tag - it must be an HTTP header
+    // This is handled at the server/CDN level (e.g., Vercel)
+    // Removed the meta tag implementation as it causes browser warnings
+
+    // Add other security-related meta tags
+    const securityMetas = [
+      { httpEquiv: 'X-Content-Type-Options', content: 'nosniff' },
+      { httpEquiv: 'X-XSS-Protection', content: '1; mode=block' },
+      { httpEquiv: 'Referrer-Policy', content: 'strict-origin-when-cross-origin' },
+      { name: 'robots', content: 'noindex, nofollow' } // Adjust based on needs
+    ];
+
+    securityMetas.forEach(meta => {
+      const metaEl = document.createElement('meta');
+      if ('httpEquiv' in meta) {
+        metaEl.httpEquiv = meta.httpEquiv;
+      } else if ('name' in meta) {
+        metaEl.name = meta.name;
+      }
+      metaEl.content = meta.content;
+      document.head.appendChild(metaEl);
+    });
+  } catch (error) {
+    console.error('Failed to apply security headers:', error);
+    // Non-critical error - app can continue without these headers
+  }
 };
 
 /**
@@ -143,31 +148,36 @@ export const initializeSecurity = (config: SecurityConfig = {}) => {
  * Set up security-related event listeners
  */
 const setupSecurityEventListeners = () => {
-  // Detect and prevent common XSS attempts
-  window.addEventListener('error', (event) => {
-    if (event.message.includes('Script error')) {
-      console.warn('[SECURITY] Potential XSS attempt detected');
-      // Log to your security monitoring system here
-    }
-  });
-
-  // Monitor for suspicious activity
-  let clickCount = 0;
-  let lastClickTime = 0;
-  
-  document.addEventListener('click', () => {
-    const now = Date.now();
-    if (now - lastClickTime < 100) { // Clicks less than 100ms apart
-      clickCount++;
-      if (clickCount > 10) {
-        console.warn('[SECURITY] Suspicious rapid clicking detected');
-        // Implement rate limiting or user verification here
+  try {
+    // Detect and prevent common XSS attempts
+    window.addEventListener('error', (event) => {
+      if (event.message.includes('Script error')) {
+        console.warn('[SECURITY] Potential XSS attempt detected');
+        // Log to your security monitoring system here
       }
-    } else {
-      clickCount = 0;
-    }
-    lastClickTime = now;
-  });
+    });
+
+    // Monitor for suspicious activity
+    let clickCount = 0;
+    let lastClickTime = 0;
+    
+    document.addEventListener('click', () => {
+      const now = Date.now();
+      if (now - lastClickTime < 100) { // Clicks less than 100ms apart
+        clickCount++;
+        if (clickCount > 10) {
+          console.warn('[SECURITY] Suspicious rapid clicking detected');
+          // Implement rate limiting or user verification here
+        }
+      } else {
+        clickCount = 0;
+      }
+      lastClickTime = now;
+    });
+  } catch (error) {
+    console.error('Failed to set up security event listeners:', error);
+    // Non-critical error - app can continue without these listeners
+  }
 };
 
 /**
