@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { MapPin, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { generateUUID } from "@/lib/uuid-polyfill";
 
 interface GoogleAddressAutocompleteProps {
   value: string;
@@ -38,7 +39,7 @@ export function GoogleAddressAutocomplete({
   const inputRef = useRef<HTMLInputElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout>();
   const abortControllerRef = useRef<AbortController | null>(null);
-  const sessionTokenRef = useRef<string>(crypto.randomUUID());
+  const sessionTokenRef = useRef<string>(generateUUID());
 
   // Fetch autocomplete predictions
   const fetchPredictions = async (inputText: string) => {
@@ -116,7 +117,7 @@ export function GoogleAddressAutocomplete({
     setLoading(true);
 
     // Generate new session token for next search session
-    sessionTokenRef.current = crypto.randomUUID();
+    sessionTokenRef.current = generateUUID();
 
     try {
       const { data, error } = await supabase.functions.invoke('google-places-autocomplete', {
