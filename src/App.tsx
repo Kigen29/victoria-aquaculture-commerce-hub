@@ -1,4 +1,4 @@
-
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,7 +10,7 @@ import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
 import Shop from "./pages/Shop";
 import Cart from "./pages/Cart";
-import Checkout from "./pages/Checkout";
+const Checkout = lazy(() => import("./pages/Checkout"));
 import OrderSuccess from "./pages/OrderSuccess";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
@@ -55,7 +55,11 @@ const App = () => (
               
               {/* Protected routes */}
               <Route element={<PrivateRoute />}>
-                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/checkout" element={
+                  <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+                    <Checkout />
+                  </Suspense>
+                } />
                 <Route path="/order-success" element={<OrderSuccess />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/orders" element={<Orders />} />
