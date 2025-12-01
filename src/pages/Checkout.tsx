@@ -26,6 +26,8 @@ const chickenImages = [
 
 // Function to get appropriate image based on product category
 const getProductImage = (product: any) => {
+  // Guard against null/undefined product
+  if (!product) return fishImages[0];
   if (product.image_url) return product.image_url;
   
   const category = product.category?.toLowerCase();

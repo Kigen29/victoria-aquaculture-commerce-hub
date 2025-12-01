@@ -143,26 +143,47 @@ const Orders = () => {
                   <CardContent>
                     <div className="space-y-3">
                       {order.order_items.map((item) => (
-                        <div key={item.id} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
-                          <div className="flex-shrink-0">
-                            <img
-                              src={item.products.image_url || "/placeholder.svg"}
-                              alt={item.products.name}
-                              className="w-12 h-12 object-cover rounded"
-                            />
+                        item.products ? (
+                          <div key={item.id} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+                            <div className="flex-shrink-0">
+                              <img
+                                src={item.products.image_url || "/placeholder.svg"}
+                                alt={item.products.name}
+                                className="w-12 h-12 object-cover rounded"
+                              />
+                            </div>
+                            <div className="flex-grow">
+                              <h4 className="font-medium">{item.products.name}</h4>
+                              <p className="text-sm text-gray-600">
+                                Quantity: {item.quantity} × KSh {item.unit_price.toFixed(2)}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-medium">
+                                KSh {(item.quantity * item.unit_price).toFixed(2)}
+                              </p>
+                            </div>
                           </div>
-                          <div className="flex-grow">
-                            <h4 className="font-medium">{item.products.name}</h4>
-                            <p className="text-sm text-gray-600">
-                              Quantity: {item.quantity} × KSh {item.unit_price.toFixed(2)}
-                            </p>
+                        ) : (
+                          <div key={item.id} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg opacity-60">
+                            <div className="flex-shrink-0">
+                              <div className="w-12 h-12 bg-gray-300 rounded flex items-center justify-center text-gray-500 text-xs">
+                                N/A
+                              </div>
+                            </div>
+                            <div className="flex-grow">
+                              <h4 className="font-medium text-gray-500">Deleted Product</h4>
+                              <p className="text-sm text-gray-600">
+                                Quantity: {item.quantity} × KSh {item.unit_price.toFixed(2)}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-medium">
+                                KSh {(item.quantity * item.unit_price).toFixed(2)}
+                              </p>
+                            </div>
                           </div>
-                          <div className="text-right">
-                            <p className="font-medium">
-                              KSh {(item.quantity * item.unit_price).toFixed(2)}
-                            </p>
-                          </div>
-                        </div>
+                        )
                       ))}
                     </div>
                   </CardContent>
