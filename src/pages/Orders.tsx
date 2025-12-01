@@ -8,6 +8,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { ShoppingBag, Calendar, DollarSign, Package } from "lucide-react";
 import { format } from "date-fns";
 
+type OrderHistoryItem = {
+  order_id: string;
+  order_status: string;
+  total_amount: number;
+  order_created_at: string;
+  item_id: string;
+  quantity: number;
+  unit_price: number;
+  product_name: string | null;
+  product_image_url: string | null;
+};
+
 type Order = {
   id: string;
   status: string;
@@ -17,10 +29,8 @@ type Order = {
     id: string;
     quantity: number;
     unit_price: number;
-    products: {
-      name: string;
-      image_url: string;
-    };
+    product_name: string | null;
+    product_image_url: string | null;
   }[];
 };
 
@@ -41,26 +51,37 @@ const Orders = () => {
 
   const fetchOrders = async () => {
     try {
-      const { data, error } = await supabase
-        .from("orders")
-        .select(`
-          *,
-          order_items (
-            id,
-            quantity,
-            unit_price,
-            products (
-              name,
-              image_url
-            )
-          )
-        `)
-        .eq("user_id", user?.id)
-        .in("status", ["completed", "failed", "cancelled"])
-        .order("created_at", { ascending: false });
+      const { data, error } = await supabase.rpc('get_user_order_history', {
+        requesting_user_id: user?.id
+      });
 
       if (error) throw error;
-      setOrders(data || []);
+
+      // Transform flat data into nested structure
+      const ordersMap = new Map<string, Order>();
+      
+      (data as OrderHistoryItem[] || []).forEach((item) => {
+        if (!ordersMap.has(item.order_id)) {
+          ordersMap.set(item.order_id, {
+            id: item.order_id,
+            status: item.order_status,
+            total_amount: item.total_amount,
+            created_at: item.order_created_at,
+            order_items: []
+          });
+        }
+        
+        const order = ordersMap.get(item.order_id)!;
+        order.order_items.push({
+          id: item.item_id,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          product_name: item.product_name,
+          product_image_url: item.product_image_url
+        });
+      });
+
+      setOrders(Array.from(ordersMap.values()));
     } catch (error) {
       console.error("Error fetching orders:", error);
     } finally {
@@ -143,47 +164,26 @@ const Orders = () => {
                   <CardContent>
                     <div className="space-y-3">
                       {order.order_items.map((item) => (
-                        item.products ? (
-                          <div key={item.id} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
-                            <div className="flex-shrink-0">
-                              <img
-                                src={item.products.image_url || "/placeholder.svg"}
-                                alt={item.products.name}
-                                className="w-12 h-12 object-cover rounded"
-                              />
-                            </div>
-                            <div className="flex-grow">
-                              <h4 className="font-medium">{item.products.name}</h4>
-                              <p className="text-sm text-gray-600">
-                                Quantity: {item.quantity} × KSh {item.unit_price.toFixed(2)}
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-medium">
-                                KSh {(item.quantity * item.unit_price).toFixed(2)}
-                              </p>
-                            </div>
+                        <div key={item.id} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+                          <div className="flex-shrink-0">
+                            <img
+                              src={item.product_image_url || "/placeholder.svg"}
+                              alt={item.product_name || "Product"}
+                              className="w-12 h-12 object-cover rounded"
+                            />
                           </div>
-                        ) : (
-                          <div key={item.id} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg opacity-60">
-                            <div className="flex-shrink-0">
-                              <div className="w-12 h-12 bg-gray-300 rounded flex items-center justify-center text-gray-500 text-xs">
-                                N/A
-                              </div>
-                            </div>
-                            <div className="flex-grow">
-                              <h4 className="font-medium text-gray-500">Deleted Product</h4>
-                              <p className="text-sm text-gray-600">
-                                Quantity: {item.quantity} × KSh {item.unit_price.toFixed(2)}
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-medium">
-                                KSh {(item.quantity * item.unit_price).toFixed(2)}
-                              </p>
-                            </div>
+                          <div className="flex-grow">
+                            <h4 className="font-medium">{item.product_name || "Unknown Product"}</h4>
+                            <p className="text-sm text-gray-600">
+                              Quantity: {item.quantity} × KSh {item.unit_price.toFixed(2)}
+                            </p>
                           </div>
-                        )
+                          <div className="text-right">
+                            <p className="font-medium">
+                              KSh {(item.quantity * item.unit_price).toFixed(2)}
+                            </p>
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </CardContent>
