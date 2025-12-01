@@ -28,6 +28,8 @@ const chickenImages = [
 
 // Function to get appropriate image based on product category
 const getProductImage = (product: any) => {
+  // Guard against null/undefined product
+  if (!product) return fishImages[0];
   if (product.image_url) return product.image_url;
   
   const category = product.category?.toLowerCase();
@@ -85,10 +87,11 @@ export default function Cart() {
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-4">
               {cartItems.map(({ product, quantity }) => (
-                <div 
-                  key={product.id}
-                  className="flex flex-col sm:flex-row border rounded-lg p-4 gap-4 animate-fade-in"
-                >
+                product && (
+                  <div 
+                    key={product.id}
+                    className="flex flex-col sm:flex-row border rounded-lg p-4 gap-4 animate-fade-in"
+                  >
                   <div className="sm:w-24 h-24 w-full">
                     <img 
                       src={getProductImage(product)} 
@@ -138,6 +141,7 @@ export default function Cart() {
                     </Button>
                   </div>
                 </div>
+                )
               ))}
             </div>
             
@@ -148,10 +152,12 @@ export default function Cart() {
                 
                 <div className="space-y-2 mb-4">
                   {cartItems.map(({ product, quantity }) => (
-                    <div key={product.id} className="flex justify-between text-sm">
-                      <span>{product.name} × {quantity}</span>
-                      <span>KES {(Number(product.price) * quantity).toFixed(2)}</span>
-                    </div>
+                    product && (
+                      <div key={product.id} className="flex justify-between text-sm">
+                        <span>{product.name} × {quantity}</span>
+                        <span>KES {(Number(product.price) * quantity).toFixed(2)}</span>
+                      </div>
+                    )
                   ))}
                 </div>
                 
