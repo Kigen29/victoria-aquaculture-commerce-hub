@@ -62,7 +62,7 @@ const ContactSection = () => {
                   </div>
                   <div className="ml-4">
                     <p className="font-medium">Email Us</p>
-                    <p className="text-gray-600">sales@lakevictoriaaquaculture.com</p>
+                    <p className="text-gray-600">Sales@lakevictoria.co.ke</p>
                   </div>
                 </div>
 
