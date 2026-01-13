@@ -144,8 +144,45 @@ const deg2rad = (deg: number): number => {
 };
 
 const validatePhoneNumber = (phone: string): boolean => {
-  const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-  return phoneRegex.test(phone.replace(/\s/g, ''));
+  if (!phone) return false;
+  
+  // Remove spaces, dashes, and other common separators
+  const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+  
+  // Accept various Kenyan phone formats:
+  // - Local: 0712345678 (10 digits starting with 0)
+  // - International: +254712345678 or 254712345678
+  // - General international format
+  const kenyanLocalRegex = /^0[17]\d{8}$/; // 0712345678 or 0112345678
+  const kenyanInternationalRegex = /^\+?254[17]\d{8}$/; // +254712345678 or 254712345678
+  const generalInternationalRegex = /^\+?[1-9]\d{6,14}$/; // General E.164 format
+  
+  return kenyanLocalRegex.test(cleanPhone) || 
+         kenyanInternationalRegex.test(cleanPhone) || 
+         generalInternationalRegex.test(cleanPhone);
+};
+
+// Normalize phone number to international format for Pesapal
+const normalizePhoneNumber = (phone: string): string => {
+  const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+  
+  // Convert Kenyan local format to international
+  if (/^0[17]\d{8}$/.test(cleanPhone)) {
+    return '+254' + cleanPhone.substring(1);
+  }
+  
+  // Add + prefix if missing but looks like Kenyan international
+  if (/^254[17]\d{8}$/.test(cleanPhone)) {
+    return '+' + cleanPhone;
+  }
+  
+  // If already has +, return as-is
+  if (cleanPhone.startsWith('+')) {
+    return cleanPhone;
+  }
+  
+  // Otherwise add + prefix for international numbers
+  return '+' + cleanPhone;
 };
 
 const sanitizeInput = (input: string): string => {
@@ -214,10 +251,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { user_id, items, customer_info, delivery_info, total_amount } = requestData;
 
-    // Sanitize customer data
+    // Sanitize customer data and normalize phone number
     const sanitizedCustomerInfo = {
       email: customer_info.email.toLowerCase().trim(),
-      phone: sanitizeInput(customer_info.phone),
+      phone: normalizePhoneNumber(sanitizeInput(customer_info.phone)),
       full_name: sanitizeInput(customer_info.full_name),
       address: sanitizeInput(customer_info.address)
     };
