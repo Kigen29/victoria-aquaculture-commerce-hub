@@ -24,7 +24,19 @@ import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import { PaymentNotificationManager } from "./components/payment/PaymentNotificationManager";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 2, // 2 minutes - data considered fresh
+      gcTime: 1000 * 60 * 5, // 5 minutes - garbage collection time
+      refetchOnWindowFocus: true,
+      refetchOnReconnect: true,
+    },
+  },
+});
+
+// Export queryClient for use in auth context
+export { queryClient };
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
