@@ -21,9 +21,10 @@ export default function Shop() {
     window.scrollTo(0, 0);
   }, []);
   
-  // Fetch products from Supabase
+  // Fetch products from Supabase - include user ID in cache key to invalidate on user change
+  const { user } = useAuth();
   const { data: products, isLoading, error } = useQuery({
-    queryKey: ["products"],
+    queryKey: ["products", user?.id ?? "anonymous"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
@@ -31,7 +32,8 @@ export default function Shop() {
       
       if (error) throw error;
       return data as Tables<"products">[];
-    }
+    },
+    staleTime: 1000 * 60 * 2, // 2 minutes
   });
   
   // Extract unique categories from products
