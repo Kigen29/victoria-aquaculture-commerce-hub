@@ -51,12 +51,15 @@ const FeaturedProducts = () => {
       const { data, error } = await supabase
         .from("products")
         .select("*")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false })
         .limit(4);
       
       if (error) throw error;
       return data as Tables<"products">[];
-    }
+    },
+    staleTime: 1000 * 60 * 2,
+    refetchOnMount: "always",
   });
 
   return (

@@ -28,12 +28,15 @@ export default function Shop() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("*");
+        .select("*")
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false });
       
       if (error) throw error;
       return data as Tables<"products">[];
     },
     staleTime: 1000 * 60 * 2, // 2 minutes
+    refetchOnMount: "always", // Always refetch when component mounts
   });
   
   // Extract unique categories from products

@@ -13,11 +13,15 @@ const About = () => {
       const { data, error } = await supabase
         .from("products")
         .select("image_url, name")
-        .not("image_url", "is", null);
+        .is("deleted_at", null)
+        .not("image_url", "is", null)
+        .order("created_at", { ascending: false });
       
       if (error) throw error;
       return data;
-    }
+    },
+    staleTime: 1000 * 60 * 2,
+    refetchOnMount: "always",
   });
 
   // Monthly rotation: changes every month
