@@ -35,10 +35,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Invalidate product queries on auth state change to ensure fresh data
+        // Invalidate all product-related queries on auth state change to ensure fresh data
         if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
           queryClient.invalidateQueries({ queryKey: ['products'] });
           queryClient.invalidateQueries({ queryKey: ['featured-products'] });
+          queryClient.invalidateQueries({ queryKey: ['about-section-images'] });
+          queryClient.invalidateQueries({ queryKey: ['about-page-images'] });
         }
         
         // Safely handle profile fetching without blocking auth flow
